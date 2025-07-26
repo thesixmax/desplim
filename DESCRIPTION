@@ -1,0 +1,23 @@
+Package: desplim
+Title: DESPLIM algorithm in R
+Version: 1.0.0.0000
+Authors@R: 
+    person("Sixten Maximillian", "Thestrup", ,"sixten.thestrup@gmail.com", role = c("aut", "cre"))
+Description: Implementation of the DESPLIM algorithm in R.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    sf,
+    xgboost,
+    redistmetrics,
+    sfnetworks,
+    lwgeom
+Suggests: 
+    knitr,
+    rmarkdown,
+    future,
+    future.apply
+VignetteBuilder: knitr
+Config/Needs/website: rmarkdown
