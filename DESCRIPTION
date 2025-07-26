@@ -21,3 +21,4 @@ Suggests:
     future.apply
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
+URL: https://thesixmax.github.io/desplim/
