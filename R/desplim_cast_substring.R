@@ -1,4 +1,4 @@
-#' Cast an `sf` LINESTRING or MULTILINESTRING object to substring
+#' Cast an `sf` LINESTRING or MULTILINESTRING object to substrings
 #' @description Function for computing the substrings of an `sf` MULTILINESTRING
 #' or LINESTRING object.
 #' @param input_lines object of class sf with geometry type MULTILINESTRING or

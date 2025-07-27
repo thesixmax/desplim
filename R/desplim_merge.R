@@ -1,4 +1,4 @@
-#' Deterministically merge a set of polygons with possible paramters defined by
+#' Deterministically merge a set of polygons with possible parameters defined by
 #' the user.
 #' @description Function for merging a set of polygons, with optinal rules
 #' defined by the user. The merging process is deterministic, leading to

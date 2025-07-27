@@ -1,5 +1,5 @@
-#' Perform a detailed split of a polygon based on a sf LINESTRING object and
-#' optional border connections.
+#' Split a polygon based on a sf LINESTRING object and optional border 
+#' connections.
 #' @param input_polygon object of class sf of type POLYGON to be split.
 #' @param input_lines object of class sf of type LINESTRING or MULTILINESTRING
 #' to be used for splitting.
