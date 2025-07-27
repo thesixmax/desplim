@@ -2,7 +2,7 @@
 % Please edit documentation in R/desplim_cast_substring.R
 \name{desplim_cast_substring}
 \alias{desplim_cast_substring}
-\title{Cast an \code{sf} LINESTRING or MULTILINESTRING object to substring}
+\title{Cast an \code{sf} LINESTRING or MULTILINESTRING object to substrings}
 \usage{
 desplim_cast_substring(input_lines)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/desplim_merge.R
 \name{desplim_merge}
 \alias{desplim_merge}
-\title{Deterministically merge a set of polygons with possible paramters defined by
+\title{Deterministically merge a set of polygons with possible parameters defined by
 the user.}
 \usage{
 desplim_merge(

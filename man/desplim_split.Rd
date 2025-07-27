@@ -2,8 +2,8 @@
 % Please edit documentation in R/desplim_split.R
 \name{desplim_split}
 \alias{desplim_split}
-\title{Perform a detailed split of a polygon based on a sf LINESTRING object and
-optional border connections.}
+\title{Split a polygon based on a sf LINESTRING object and optional border
+connections.}
 \usage{
 desplim_split(
   input_polygon,
@@ -38,8 +38,8 @@ border of \code{input_polygon} using \code{desplim_connect_border}. Default is \
 An sf object of POLYGONs resulting from the split.
 }
 \description{
-Perform a detailed split of a polygon based on a sf LINESTRING object and
-optional border connections.
+Split a polygon based on a sf LINESTRING object and optional border
+connections.
 }
 \details{
 The function splits an input polygon based on an initial set of
