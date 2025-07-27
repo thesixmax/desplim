@@ -2,7 +2,7 @@
 % Please edit documentation in R/desplim_compactness.R
 \name{desplim_compactness}
 \alias{desplim_compactness}
-\title{Calculate the Kaufmann compactness of an \code{sf} POLYGON object}
+\title{Calculate the 'desplim' compactness of an \code{sf} POLYGON object}
 \usage{
 desplim_compactness(input, keep_metrics = FALSE)
 }

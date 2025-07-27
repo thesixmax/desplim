@@ -3,10 +3,7 @@
 \name{desplim_merge}
 \alias{desplim_merge}
 \title{Deterministically merge a set of polygons with possible paramters defined by
-the user.
-#' @description Function for merging a set of polygons, with optinal rules
-defined by the user. The merging process is deterministic, leading to
-reproducible results on subsequent runs with the same input data and rules.}
+the user.}
 \usage{
 desplim_merge(
   input_polygons,
@@ -52,15 +49,13 @@ sis set to 0 if \code{input_buildings} is not provided.}
 An sf object of POLYGONs resulting from the deterministic merge.
 }
 \description{
-Deterministically merge a set of polygons with possible paramters defined by
-the user.
-#' @description Function for merging a set of polygons, with optinal rules
+Function for merging a set of polygons, with optinal rules
 defined by the user. The merging process is deterministic, leading to
 reproducible results on subsequent runs with the same input data and rules.
 }
 \details{
 There are no requirements for all polygons being adjacent to each
-other. Althugh named \code{input_buildings}, any sf object of type POLYGON or
+other. Although named \code{input_buildings}, any sf object of type POLYGON or
 MULTIPOLYGON can be provided for this argument. For details about the
 compactness metric, please see the dedicated vignette. It is not recommended
 to set \code{compact_allow} too close to 1 and \code{compact_tolerance} too low.

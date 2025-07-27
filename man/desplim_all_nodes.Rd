@@ -21,7 +21,7 @@ MULTILINESTRING or LINESTRING object.
 }
 \details{
 Function to compute all nodes of an \code{sf} LINESTRING object, after
-optioally castig \code{input_lines} to substrings. If \code{input_lines} contains
+optionally casting \code{input_lines} to substrings. If \code{input_lines} contains
 geometries of type MULTILINESTRING, they are cast to LINESTRING before
 computing.
 }
