@@ -2,7 +2,7 @@ pandoc: 3.1.11
 pkgdown: 2.1.3
 pkgdown_sha: ~
 articles: {}
-last_built: 2025-07-27T16:30Z
+last_built: 2025-07-27T16:32Z
 urls:
   reference: https://thesixmax.github.io/desplim/reference
   article: https://thesixmax.github.io/desplim/articles
