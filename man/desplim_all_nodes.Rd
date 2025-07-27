@@ -25,3 +25,13 @@ optionally casting \code{input_lines} to substrings. If \code{input_lines} conta
 geometries of type MULTILINESTRING, they are cast to LINESTRING before
 computing.
 }
+\examples{
+line1 <- sf::st_linestring(matrix(c(0,0, 1,1), ncol = 2, byrow = TRUE))
+line2 <- sf::st_linestring(matrix(c(1,1, 2,0), ncol = 2, byrow = TRUE))
+combined_sf <- sf::st_sf(
+  id = c("a", "b"),
+  geometry = sf::st_sfc(line1, line2), crs = 4326
+)
+all_nodes <- desplim_all_nodes(combined_sf)
+print(all_nodes)
+}
