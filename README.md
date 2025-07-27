@@ -20,14 +20,14 @@ install_github("thesixmax/desplim")
 The following is the up to date list of functions available in the package. Please refer to the individual man pages and vignettes for more information. **Extended documentation, including examples, is work in progress.**
 
 | Fuction | Type | Description |
-|:----------------|:---------|:--------------------------------------------|
-| desplim_split_merge() | Main | Apply the DESPLIM algorithm to a set of input polygons and lines. |
-| desplim_split() | Main | Split a polygon based on a `sf` LINESTRING object and optional border connections. |
-| desplim_merge() | Main | Deterministically merge a set of polygons with possible parameters defined by the user. |
-| desplim_all_nodes() | Helper | Compute all nodes of an `sf` LINESTRING object |
-| desplim_angles() | Helper | Calculate the minimum and maximum angles between two `sf` LINESTRING objects. |
-| desplim_cast_substring() | Helper | Cast an `sf` LINESTRING or MULTILINESTRING object to substrings. |
-| desplim_compactness() | Helper | Calculate the 'desplim' compactness of an `sf` POLYGON object. |
-| desplim_connect_border() | Helper | Connect a `sf` LINESTRING object to border nodes of an `sf` POLYGON object. |
-| desplim_leaf_nodes() | Helper | Identify leaf nodes of an `sf` LINESTRING object. |
-| desplim_line_nearest_node() | Helper | Calculate the minimum distance linestring from an `sf` POINT object to nodes of a `sf` LINESTRING object. |
+|:------------------|:--------|:-------------------------------------------|
+| `desplim_split_merge()` | Main | Apply the DESPLIM algorithm to a set of input polygons and lines. |
+| `desplim_split()` | Main | Split a polygon based on a `sf` LINESTRING object and optional border connections. |
+| `desplim_merge()` | Main | Deterministically merge a set of polygons with possible parameters defined by the user. |
+| `desplim_all_nodes()` | Helper | Compute all nodes of an `sf` LINESTRING object |
+| `desplim_angles()` | Helper | Calculate the minimum and maximum angles between two `sf` LINESTRING objects. |
+| `desplim_cast_substring()` | Helper | Cast an `sf` LINESTRING or MULTILINESTRING object to substrings. |
+| `desplim_compactness()` | Helper | Calculate the 'desplim' compactness of an `sf` POLYGON object. |
+| `desplim_connect_border()` | Helper | Connect a `sf` LINESTRING object to border nodes of an `sf` POLYGON object. |
+| `desplim_leaf_nodes()` | Helper | Identify leaf nodes of an `sf` LINESTRING object. |
+| `desplim_line_nearest_node()` | Helper | Calculate the minimum distance linestring from an `sf` POINT object to nodes of a `sf` LINESTRING object. |
