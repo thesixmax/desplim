@@ -1,6 +1,6 @@
 #' Deterministically merge a set of polygons with possible paramters defined by
 #' the user.
-#' #' @description Function for merging a set of polygons, with optinal rules
+#' @description Function for merging a set of polygons, with optinal rules
 #' defined by the user. The merging process is deterministic, leading to
 #' reproducible results on subsequent runs with the same input data and rules.
 #' @param input_polygons object of class sf of type POLYGON to be merged.
@@ -25,7 +25,7 @@
 #' sis set to 0 if `input_buildings` is not provided.
 #' @return An sf object of POLYGONs resulting from the deterministic merge.
 #' @details There are no requirements for all polygons being adjacent to each
-#' other. Althugh named `input_buildings`, any sf object of type POLYGON or
+#' other. Although named `input_buildings`, any sf object of type POLYGON or
 #' MULTIPOLYGON can be provided for this argument. For details about the
 #' compactness metric, please see the dedicated vignette. It is not recommended
 #' to set `compact_allow` too close to 1 and `compact_tolerance` too low.

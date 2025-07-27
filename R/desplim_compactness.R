@@ -1,4 +1,4 @@
-#' Calculate the Kaufmann compactness of an `sf` POLYGON object
+#' Calculate the 'desplim' compactness of an `sf` POLYGON object
 #' @description Based on the approach described in Kaufmann et al. (2018), this
 #' function computes the compactness of an `sf` POLYGON object.
 #' @param input object of class `sf` of type POLYGON or MULTIPOLYGON.

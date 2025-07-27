@@ -6,7 +6,7 @@
 #' substring? Default is `FALSE`.
 #' @return An sf object of type POINT containing all nodes of `input_lines`.
 #' @details Function to compute all nodes of an `sf` LINESTRING object, after
-#' optioally castig `input_lines` to substrings. If `input_lines` contains
+#' optionally casting `input_lines` to substrings. If `input_lines` contains
 #' geometries of type MULTILINESTRING, they are cast to LINESTRING before
 #' computing.
 #' @export
