@@ -1,6 +1,6 @@
 # desplim: Implementation of the DESPLIM algorithm in R
 
-This package is the implementation of the DESPLIM (deterministic split-merge) algorithm in R. **An associated paper is forthcoming.**
+This package is the implementation of the DESPLIM (deterministic split-merge) algorithm for geospatial districting in R. **An associated paper is forthcoming.**
 
 Aside from the main algorithm, the package contains several helper functions, which can be utilised when working with `sf` LINESTRING and POLYGON data.
 
