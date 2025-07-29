@@ -2,7 +2,7 @@
 <!-- badges: start -->
   [![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
   [![CodeFactor](https://www.codefactor.io/repository/github/thesixmax/desplim/badge)](https://www.codefactor.io/repository/github/thesixmax/desplim)
-  [![R-CMD-check](https://github.com/thesixmax/desplim/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/thesixmax/desplim/actions/workflows/R-CMD-check.yaml)
+  [![R build status](https://github.com/thesixmax/desplim/workflows/R-CMD-check/badge.svg)](https://github.com/thesixmax/desplim/actions)
 <!-- badges: end -->
 
 This package is the implementation of the DESPLIM (deterministic split-merge) algorithm for geospatial districting in R. **An associated paper is forthcoming.**
