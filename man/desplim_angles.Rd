@@ -40,18 +40,18 @@ ref_line <- sf::st_linestring(matrix(
   ncol = 2,
   byrow = TRUE
 ))
-input_sf <- sf::st_sf(id = "A", geom = sf::st_sfc(input_line), crs = 32613)
-ref_sf <- sf::st_sf(id = "B", geom = sf::st_sfc(ref_line), crs = 32613)
+input_sf <- sf::st_sf(geom = sf::st_sfc(input_line), crs = 32613)
+ref_sf <- sf::st_sf(geom = sf::st_sfc(ref_line), crs = 32613)
 
 # Calculate angles
-angles_out <- desplim_angles(input_lines = input_sf, reference_lines = ref_sf)
-print(angles_out)
+angles_sf <- desplim_angles(input_lines = input_sf, reference_lines = ref_sf)
+print(angles_sf)
 
 # Plot
 plot(sf::st_geometry(input_sf), col = "red", lwd = 2)
 plot(sf::st_geometry(ref_sf), add = TRUE, col = "blue", lwd = 2)
-text(-0.1, 0.1, paste0(round(angles_out$min_angle[[1]], 1), "°"), pos = 2)
-text(-0.1, -0.1, paste0(round(angles_out$max_angle[[1]], 1), "°"), pos = 2)
-text(0.1, 0.1, paste0(round(angles_out$max_angle[[2]], 1), "°"), pos = 4)
-text(0.1, -0.1, paste0(round(angles_out$min_angle[[2]], 1), "°"), pos = 4)
+text(-0.1, 0.1, paste0(round(angles_sf$min_angle[[1]], 1), "°"), pos = 2)
+text(-0.1, -0.1, paste0(round(angles_sf$max_angle[[1]], 1), "°"), pos = 2)
+text(0.1, 0.1, paste0(round(angles_sf$max_angle[[2]], 1), "°"), pos = 4)
+text(0.1, -0.1, paste0(round(angles_sf$min_angle[[2]], 1), "°"), pos = 4)
 }
