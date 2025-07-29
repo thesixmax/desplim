@@ -24,3 +24,16 @@ linestrings, the function converts all MULTILINESTRING to LINESTRING. The
 output is always LINESTRING of class matching \code{input_lines}. Inputs of type
 sfc are not supported.
 }
+\examples{
+# Create input line
+input_line <- sf::st_linestring(matrix(
+  c(-1, 0, 0, 0, 1, 0, 2, 0),
+  ncol = 2,
+  byrow = TRUE
+))
+input_sf <- sf::st_sf(geom = sf::st_sfc(input_line), crs = 32613)
+print(input_sf)
+# Cast to substring
+substring_sf <- desplim_cast_substring(input_sf)
+print(substring_sf)
+}
