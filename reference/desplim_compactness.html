@@ -68,6 +68,27 @@ compactness metric. If <code>input</code> contains geometries of type MULTIPOLYG
 are cast to POLYGON before computing.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create simple plygon</span></span></span>
+<span class="r-in"><span><span class="va">polygon_coords</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">3</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="op">-</span><span class="fl">3</span>, <span class="fl">1</span>, <span class="op">-</span><span class="fl">2</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span> ncol <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span> byrow <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">simple_polygon</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/sfc.html" class="external-link">st_sfc</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_polygon</a></span><span class="op">(</span><span class="va">polygon_coords</span><span class="op">)</span>, crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">input_sf</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/sf.html" class="external-link">st_sf</a></span><span class="op">(</span>geometry <span class="op">=</span> <span class="va">simple_polygon</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Calculate compactness</span></span></span>
+<span class="r-in"><span><span class="va">compactness_result</span> <span class="op">&lt;-</span> <span class="fu">desplim_compactness</span><span class="op">(</span><span class="va">input_sf</span>, keep_metrics <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">input_sf</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="desplim_compactness-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_drop_geometry</a></span><span class="op">(</span><span class="va">compactness_result</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       boyce box_reock      hull   len_wid    polsby     reock  schwartz</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.8264538 0.5499207 0.9165904 0.7503429 0.5586596 0.3524037 0.7474354</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        skew     sym_x     sym_y compactness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.4282874 0.6491615 0.6362868   0.8179947</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
