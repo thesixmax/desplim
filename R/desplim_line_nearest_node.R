@@ -69,7 +69,7 @@ desplim_line_nearest_node <- function(
     stop("Input buildings should be POLYGON or MULTIPOLYGON")
   }
   if (
-    any(unique(sf::st_geometry_type(input_lines)) %in% c("MULTILINESTRING"))
+    any(unique(sf::st_geometry_type(input_lines)) == "MULTILINESTRING")
   ) {
     input_lines <- sf::st_cast(
       input_lines,
@@ -77,7 +77,7 @@ desplim_line_nearest_node <- function(
       warn = FALSE
     )
   }
-  if (any(unique(sf::st_geometry_type(input_nodes)) %in% c("MULTIPOINT"))) {
+  if (any(unique(sf::st_geometry_type(input_nodes)) =="MULTIPOINT")) {
     input_nodes <- sf::st_cast(
       input_nodes,
       "POINT",

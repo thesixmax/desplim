@@ -138,7 +138,7 @@ desplim_connect_border <- function(
     )
   }
   geom_type_polygon <- unique(sf::st_geometry_type(input_polygon))
-  if (!all(geom_type_polygon %in% c("POLYGON"))) {
+  if (!all(geom_type_polygon == "POLYGON")) {
     stop(
       "Input polygon should be of type POLYGON. Found: ",
       paste(geom_type_polygon, collapse = ", ")

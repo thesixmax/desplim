@@ -123,7 +123,7 @@ desplim_angles <- function(
           return(NA_real_)
         }
         coords_ref <- sf::st_coordinates(current_ref_sfc)
-        current_ref_angles <- c()
+        current_ref_angles <- vector()
         for (v_input_idx in seq_len(nrow(coords_input))) {
           pt_b_candidate_input <- coords_input[
             v_input_idx,
