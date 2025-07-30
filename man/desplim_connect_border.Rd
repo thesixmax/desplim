@@ -61,3 +61,69 @@ are within \code{distance_intersect} of the new connection. If no valid connecti
 for the border node exist, the border node is removed from the set of
 candidate border nodes.
 }
+\examples{
+# Create input polygon
+poly_coords <- list(matrix(
+  c(0, 0, 10, 0, 16, 3, 10, 10, 0, 10, -4, 5, 0, 0),
+  ncol = 2,
+  byrow = TRUE
+))
+input_poly <- sf::st_sf(
+  geometry = sf::st_sfc(sf::st_polygon(poly_coords), crs = 32612)
+)
+
+# Create input linestring
+line_coords <- matrix(
+  c(-4, 5, -2, 5, 7, 8, 9, 6, 9, 1),
+  ncol = 2,
+  byrow = TRUE
+)
+input_line <- sf::st_sf(
+  geometry = sf::st_sfc(sf::st_linestring(line_coords), crs = 32612)
+)
+
+# Create input building(s)
+building_coords <- list(matrix(
+  c(3, 9, 9, 9, 9, 8.5, 3, 8.5, 3, 9),
+  ncol = 2,
+  byrow = TRUE
+))
+input_build <- sf::st_sf(
+  geometry = sf::st_sfc(sf::st_polygon(building_coords), crs = 32612)
+)
+
+# Function call
+border_connections <- desplim_connect_border(
+  input_linestring = input_line,
+  input_polygon = input_poly,
+  input_buildings = input_build,
+  distance_intersect = 3, # Small for example
+  distance_nodes = 5, # Small for example
+  minimum_angle = 30,
+  num_candidates = 3
+)
+
+# Visualisation
+plot(sf::st_geometry(input_poly), border = 'black', lwd = 3)
+plot(sf::st_geometry(input_build), col = 'tomato3', add = TRUE)
+plot(sf::st_geometry(input_line), col = 'olivedrab3', lwd = 4, add = TRUE)
+plot(
+  sf::st_geometry(border_connections),
+  col = 'royalblue4',
+  lwd = 3,
+  lty = 2,
+  add = TRUE
+)
+legend(
+  "bottomleft",
+  legend = c("Border", "Building", "Input lines", "Border connections"),
+  col = c("black", "tomato3", "olivedrab3", "royalblue4"),
+  lwd = c(3, 15, 4, 3),
+  lty = c(1, 1, 1, 2),
+  bty = "n",
+  horiz = TRUE,
+  xjust = 0.5,
+  cex = 1.1,
+  text.width = c(3, 2, 2, 2)
+)
+}

@@ -9,6 +9,19 @@
 #' @details Please see the dedicated vignette for information about the
 #' compactness metric. If `input` contains geometries of type MULTIPOLYGON, they
 #' are cast to POLYGON before computing.
+#' @examples
+#' # Create simple plygon
+#' polygon_coords <- list(matrix(
+#'  c(0, 0, 0, 1, 1, 3, -1, 2, -3, 1, -2, 0, 0, 0),
+#'  ncol = 2,
+#'  byrow = TRUE
+#' ))
+#' simple_polygon <- sf::st_sfc(sf::st_polygon(polygon_coords), crs = 4326)
+#' input_sf <- sf::st_sf(geometry = simple_polygon)
+#' # Calculate compactness
+#' compactness_result <- desplim_compactness(input_sf, keep_metrics = TRUE)
+#' plot(input_sf)
+#' print(sf::st_drop_geometry(compactness_result))
 #' @export
 desplim_compactness <- function(input, keep_metrics = FALSE) {
   if (!inherits(input, "sf")) {
