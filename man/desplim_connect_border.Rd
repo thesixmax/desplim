@@ -114,16 +114,4 @@ plot(
   lty = 2,
   add = TRUE
 )
-legend(
-  "bottomleft",
-  legend = c("Border", "Building", "Input lines", "Border connections"),
-  col = c("black", "tomato3", "olivedrab3", "royalblue4"),
-  lwd = c(3, 15, 4, 3),
-  lty = c(1, 1, 1, 2),
-  bty = "n",
-  horiz = TRUE,
-  xjust = 0.5,
-  cex = 1.1,
-  text.width = c(3, 2, 2, 2)
-)
 }
