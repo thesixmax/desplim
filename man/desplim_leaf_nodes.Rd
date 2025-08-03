@@ -23,3 +23,18 @@ one linestring in the \code{sf} LINESTRING object. If \code{input_lines} contain
 geometries of type MULTILINESTRING, they are cast to LINESTRING before
 computing.
 }
+\examples{
+# Generate lines
+line1 <- sf::st_linestring(rbind(c(0, 0), c(1, 1)))
+line2 <- sf::st_linestring(rbind(c(1, 1), c(2, 2)))
+line3 <- sf::st_linestring(rbind(c(1, 1), c(1, 0)))
+combined_sf <- sf::st_as_sf(sf::st_sfc(line1, line2, line3, crs = 4326))
+
+# Compute leaf nodes
+leaf_nodes <- desplim_leaf_nodes(combined_sf)
+print(leaf_nodes)
+
+# Visualise
+plot(sf::st_geometry(combined_sf), col = "blue", lwd = 2)
+plot(sf::st_geometry(leaf_nodes), col = "red", pch = 16, cex = 2, add = TRUE)
+}
