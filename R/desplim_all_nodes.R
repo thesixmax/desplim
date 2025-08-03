@@ -10,11 +10,18 @@
 #' geometries of type MULTILINESTRING, they are cast to LINESTRING before
 #' computing.
 #' @examples
-#' line1 <- sf::st_linestring(matrix(c(0,0, 1,1), ncol = 2, byrow = TRUE))
-#' line2 <- sf::st_linestring(matrix(c(1,1, 2,0), ncol = 2, byrow = TRUE))
-#' combined_sf <- sf::st_sf(geometry = sf::st_sfc(line1, line2), crs = 4326)
+#' # Generate lines
+#' line1 <- sf::st_linestring(rbind(c(0, 0), c(1, 1)))
+#' line2 <- sf::st_linestring(rbind(c(1, 1), c(2, 0)))
+#' sf::st_as_sf(sf::st_sfc(line1, line2, line3, crs = 4326))
+#'
+#' # Compute all nodes
 #' all_nodes <- desplim_all_nodes(combined_sf)
 #' print(all_nodes)
+#'
+#' # Visualise
+#' plot(sf::st_geometry(combined_sf), col = "blue", lwd = 2)
+#' plot(sf::st_geometry(all_nodes), col = "red", pch = 16, cex = 2, add = TRUE)
 #' @export
 desplim_all_nodes <- function(input_lines, cast_substring = FALSE) {
   if (!inherits(input_lines, "sf")) {
