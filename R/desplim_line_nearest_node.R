@@ -68,16 +68,14 @@ desplim_line_nearest_node <- function(
   ) {
     stop("Input buildings should be POLYGON or MULTIPOLYGON")
   }
-  if (
-    any(unique(sf::st_geometry_type(input_lines)) == "MULTILINESTRING")
-  ) {
+  if (any(unique(sf::st_geometry_type(input_lines)) == "MULTILINESTRING")) {
     input_lines <- sf::st_cast(
       input_lines,
       "LINESTRING",
       warn = FALSE
     )
   }
-  if (any(unique(sf::st_geometry_type(input_nodes)) =="MULTIPOINT")) {
+  if (any(unique(sf::st_geometry_type(input_nodes)) == "MULTIPOINT")) {
     input_nodes <- sf::st_cast(
       input_nodes,
       "POINT",
@@ -90,10 +88,20 @@ desplim_line_nearest_node <- function(
   if (cast_substring) {
     input_lines <- desplim_cast_substring(input_lines)
   }
+  if (attr(input_nodes, "sf_column") != "geometry") {
+    input_nodes <- .desplim_rename_geom(input_nodes)
+  }
+  if (attr(input_lines, "sf_column") != "geometry") {
+    input_lines <- .desplim_rename_geom(input_lines)
+  }
+  if (!is.null(input_buildings)) {
+    if (attr(input_buildings, "sf_column") != "geometry") {
+      input_buildings <- .desplim_rename_geom(input_buildings)
+    }
+  }
   all_nodes <- desplim_all_nodes(input_lines)
-  subset_nodes <- all_nodes[
-    -unlist(sf::st_equals(input_nodes, all_nodes, sparse = TRUE)),
-  ]
+  nodes_inter_list <- lengths(sf::st_intersects(all_nodes, input_nodes)) > 0
+  subset_nodes <- all_nodes[!nodes_inter_list, ]
   if (combine_nodes) {
     subset_nearest_node <- subset_nodes[
       sf::st_nearest_feature(input_nodes, subset_nodes),
@@ -114,9 +122,9 @@ desplim_line_nearest_node <- function(
       seq_along(subset_distances),
       (length(subset_distances) + 1):(2 * length(subset_distances))
     )
-    combined_nearest_node <- rbind(subset_nearest_node, input_nearest_node)[
-      indices,
-    ]
+    temp_subset <- subset_nearest_node["geometry"]
+    temp_input <- input_nearest_node["geometry"]
+    combined_nearest_node <- rbind(temp_subset, temp_input)[indices, ]
   } else {
     combined_nearest_node <- subset_nodes[
       sf::st_nearest_feature(input_nodes, subset_nodes),
