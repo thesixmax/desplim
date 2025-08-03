@@ -23,6 +23,48 @@
 #' linestring is computed. If `input_nodes` or `input_lines` contain geometries
 #' of type MULTIPOINT or MULTILINESTRING, they are converted to POINT and
 #' LINESTRING respectively before computing.
+#' @examples
+#' # Create nodes, lines and a building
+#' crs <- 32632
+#' line1 <- sf::st_linestring(rbind(c(0, 10), c(10, 10)))
+#' line2 <- sf::st_linestring(rbind(c(10, 10), c(10, 0)))
+#' lines_sf <- sf::st_as_sf(sf::st_sfc(line1, line2, crs = crs))
+#' 
+#' node1 <- sf::st_point(c(3, 6))
+#' node2 <- sf::st_point(c(8, 4))
+#' points_sf <- sf::st_as_sf(sf::st_sfc(node1, node2, crs = crs))
+#' 
+#' building_poly <- sf::st_polygon(list(rbind(
+#'   c(1, 7),
+#'   c(1, 9),
+#'   c(4, 9),
+#'   c(4, 7),
+#'   c(1, 7)
+#' )))
+#' building_sf <- sf::st_as_sf(sf::st_sfc(building_poly, crs = crs))
+#' 
+#' # Compute connections with no building
+#' connections_no_building <- desplim_line_nearest_node(points_sf, lines_sf)
+#' print(connections_no_building)
+#' 
+#' # Visualise
+#' plot(sf::st_geometry(lines_sf), col = "black", lwd = 2)
+#' plot(sf::st_geometry(points_sf), col = "blue", pch = 16, cex = 2, add = TRUE)
+#' plot(sf::st_geometry(connections_no_building), col = "green", lwd = 2, add = TRUE)
+#' 
+#' # Compute connections with building
+#' connections_with_building <- desplim_line_nearest_node(
+#'   input_nodes = points_sf,
+#'   input_lines = lines_sf,
+#'   input_buildings = building_sf
+#' )
+#' print(connections_with_building)
+#' 
+#' # Visualise
+#' plot(sf::st_geometry(lines_sf), col = "black", lwd = 2)
+#' plot(sf::st_geometry(building_sf), col = "tomato3", border = NA, add = TRUE)
+#' plot(sf::st_geometry(points_sf), col = "blue", pch = 16, cex = 2, add = TRUE)
+#' plot(sf::st_geometry(connections_with_building), col = "green", lwd = 2, add = TRUE)
 #' @export
 desplim_line_nearest_node <- function(
   input_nodes,
