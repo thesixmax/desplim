@@ -13,7 +13,7 @@
 #' # Generate lines
 #' line1 <- sf::st_linestring(rbind(c(0, 0), c(1, 1)))
 #' line2 <- sf::st_linestring(rbind(c(1, 1), c(2, 0)))
-#' sf::st_as_sf(sf::st_sfc(line1, line2, line3, crs = 4326))
+#' combined_sf <- sf::st_as_sf(sf::st_sfc(line1, line2, crs = 4326))
 #'
 #' # Compute all nodes
 #' all_nodes <- desplim_all_nodes(combined_sf)
