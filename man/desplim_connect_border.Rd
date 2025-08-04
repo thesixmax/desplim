@@ -104,12 +104,12 @@ border_connections <- desplim_connect_border(
 )
 
 # Visualisation
-plot(sf::st_geometry(input_poly), border = 'black', lwd = 3)
+plot(sf::st_geometry(input_poly), border = 'black', lwd = 2)
 plot(sf::st_geometry(input_build), col = 'tomato3', add = TRUE)
-plot(sf::st_geometry(input_line), col = 'olivedrab3', lwd = 4, add = TRUE)
+plot(sf::st_geometry(input_line), col = 'olivedrab', lwd = 4, add = TRUE)
 plot(
   sf::st_geometry(border_connections),
-  col = 'royalblue4',
+  col = 'slateblue3',
   lwd = 3,
   lty = 2,
   add = TRUE

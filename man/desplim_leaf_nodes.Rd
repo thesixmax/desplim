@@ -35,6 +35,6 @@ leaf_nodes <- desplim_leaf_nodes(combined_sf)
 print(leaf_nodes)
 
 # Visualise
-plot(sf::st_geometry(combined_sf), col = "blue", lwd = 2)
-plot(sf::st_geometry(leaf_nodes), col = "red", pch = 16, cex = 2, add = TRUE)
+plot(sf::st_geometry(combined_sf), col = "slateblue3", lwd = 2)
+plot(sf::st_geometry(leaf_nodes), col = "tomato3", pch = 16, cex = 2, add = TRUE)
 }

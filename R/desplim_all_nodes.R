@@ -20,8 +20,8 @@
 #' print(all_nodes)
 #'
 #' # Visualise
-#' plot(sf::st_geometry(combined_sf), col = "blue", lwd = 2)
-#' plot(sf::st_geometry(all_nodes), col = "red", pch = 16, cex = 2, add = TRUE)
+#' plot(sf::st_geometry(combined_sf), col = "slateblue3", lwd = 2)
+#' plot(sf::st_geometry(all_nodes), col = "tomato3", pch = 16, cex = 2, add = TRUE)
 #' @export
 desplim_all_nodes <- function(input_lines, cast_substring = FALSE) {
   if (!inherits(input_lines, "sf")) {

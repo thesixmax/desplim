@@ -31,8 +31,8 @@
 #' print(angles_sf)
 #' 
 #' # Plot
-#' plot(sf::st_geometry(input_sf), col = "red", lwd = 2)
-#' plot(sf::st_geometry(ref_sf), add = TRUE, col = "blue", lwd = 2)
+#' plot(sf::st_geometry(input_sf), col = "tomato3", lwd = 2)
+#' plot(sf::st_geometry(ref_sf), add = TRUE, col = "slateblue3", lwd = 2)
 #' text(-0.1, 0.1, paste0(round(angles_sf$min_angle[[1]], 1), "°"), pos = 2)
 #' text(-0.1, -0.1, paste0(round(angles_sf$max_angle[[1]], 1), "°"), pos = 2)
 #' text(0.1, 0.1, paste0(round(angles_sf$max_angle[[2]], 1), "°"), pos = 4)

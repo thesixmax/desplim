@@ -76,8 +76,8 @@ print(connections_no_building)
 
 # Visualise
 plot(sf::st_geometry(lines_sf), col = "black", lwd = 2)
-plot(sf::st_geometry(points_sf), col = "blue", pch = 16, cex = 2, add = TRUE)
-plot(sf::st_geometry(connections_no_building), col = "green", lwd = 2, add = TRUE)
+plot(sf::st_geometry(points_sf), col = "slateblue3", pch = 16, cex = 2, add = TRUE)
+plot(sf::st_geometry(connections_no_building), col = "olivedrab", lwd = 2, add = TRUE)
 
 # Compute connections with building
 connections_with_building <- desplim_line_nearest_node(
