@@ -20,6 +20,51 @@
 #' `desplim_line_nearest_node`. If `enable_border_connect` is `TRUE`, the input
 #' linestrings are connected to the border of the input polygon using
 #' `desplim_connect_border`.
+#' @examples
+#' # Create polygon
+#' crs <- 32632
+#' district_poly <- sf::st_polygon(list(rbind(
+#'   c(0, 0),
+#'   c(100, 0),
+#'   c(100, 80),
+#'   c(90, 90),
+#'   c(0, 80),
+#'   c(0, 0)
+#' )))
+#' district_sf <- sf::st_as_sf(sf::st_sfc(district_poly, crs = crs))
+#' plot(district_sf, border = "black", lwd = 2, reset = FALSE)
+#' 
+#' # Create roads
+#' road1 <- sf::st_linestring(rbind(c(5, 5), c(50, 60), c(110, 50)))
+#' road2 <- sf::st_linestring(rbind(c(-10, 60), c(20, 40), c(80, 10)))
+#' road3 <- sf::st_linestring(rbind(c(-5, 70), c(90, 70), c(90, 20), c(110, 20)))
+#' roads_sf <- sf::st_as_sf(sf::st_sfc(road1, road2, road3, crs = crs))
+#' plot(roads_sf, col = "tomato3", lwd = 2, add = TRUE)
+#' 
+#' # Split with no connection
+#' split_no_connect <- desplim_split(
+#'   district_sf,
+#'   roads_sf,
+#'   enable_line_nearest_node = FALSE
+#' )
+#' plot(split_no_connect, border = "black", lwd = 2)
+#' 
+#' # Split with default settings
+#' split_nearest_node <- desplim_split(
+#'   district_sf,
+#'   roads_sf
+#' )
+#' plot(split_nearest_node, border = "slateblue3", lwd = 2)
+#' 
+#' # Split with border connection
+#' split_polygons_border <- desplim_split(
+#'   district_sf,
+#'   roads_sf,
+#'   enable_border_connect = TRUE,
+#'   distance_nodes = 50,
+#'   distance_intersect = 5
+#' )
+#' plot(split_polygons_border, border = "olivedrab", lwd = 2)
 #' @export
 desplim_split <- function(
   input_polygon,
