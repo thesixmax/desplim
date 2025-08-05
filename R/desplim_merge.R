@@ -30,6 +30,48 @@
 #' compactness metric, please see the dedicated vignette. It is not recommended
 #' to set `compact_allow` too close to 1 and `compact_tolerance` too low.
 #' This is especially true if `compact_method` is set to `"polsby"`.
+#' @examples
+#' # Create grid
+#' crs <- 32632
+#' grid_area <- sf::st_bbox(
+#'   c(xmin = 0, ymin = 0, xmax = 1200, ymax = 1000),
+#'   crs = crs
+#' )
+#' grid_poly <- sf::st_as_sf(sf::st_make_grid(
+#'   grid_area,
+#'   cellsize = 100,
+#'   square = TRUE
+#' ))
+#' plot(sf::st_geometry(grid_poly), border = 'grey')
+#' 
+#' # Create buildings
+#' n_buildings <- 100
+#' set.seed(420)
+#' building_centers <- sf::st_sample(sf::st_as_sfc(grid_area), size = n_buildings)
+#' list_of_buildings <- lapply(sf::st_geometry(building_centers), function(point) {
+#'   x <- point[1]
+#'   y <- point[2]
+#'   width <- runif(1, min = 5, max = 20)
+#'   height <- runif(1, min = 5, max = 20)
+#'   corners <- rbind(
+#'     c(x - width / 2, y - height / 2),
+#'     c(x + width / 2, y - height / 2),
+#'     c(x + width / 2, y + height / 2),
+#'     c(x - width / 2, y + height / 2),
+#'     c(x - width / 2, y - height / 2)
+#'   )
+#'   sf::st_as_sf(sf::st_sfc(sf::st_polygon(list(corners))), crs = crs)
+#' })
+#' buildings_sf <- do.call(rbind, list_of_buildings)
+#' plot(sf::st_geometry(buildings_sf), col = 'slateblue3', border = NA, add = TRUE)
+#' 
+#' # Merge with default settings
+#' grid_merged <- desplim_merge(
+#'   input_polygon = grid_poly,
+#'   input_buildings = buildings_sf
+#' )
+#' print(grid_merged, n = nrow(grid_merged))
+#' plot(sf::st_geometry(grid_merged), lwd = 4, border = 'tomato3', add = TRUE)
 #' @export
 desplim_merge <- function(
   input_polygons,
