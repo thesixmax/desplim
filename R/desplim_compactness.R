@@ -73,13 +73,13 @@ desplim_compactness <- function(input, keep_metrics = FALSE) {
     plans = districts$id,
     shp = districts
   )
-  districts$sym_x <- sapply(
-    seq_len(nrow(districts)),
-    function(x) .sym_x_fun(districts[x, ])
+  districts$sym_x <- redistmetrics::comp_x_sym(
+    plans = districts$id,
+    shp = districts
   )
-  districts$sym_y <- sapply(
-    seq_len(nrow(districts)),
-    function(x) .sym_y_fun(districts[x, ])
+  districts$sym_y <- redistmetrics::comp_y_sym(
+    plans = districts$id,
+    shp = districts
   )
   districts_nogeom_temp <- sf::st_drop_geometry(districts)
   districts_nogeom <- districts_nogeom_temp[, c(
