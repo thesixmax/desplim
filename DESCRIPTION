@@ -1,6 +1,6 @@
 Package: desplim
 Title: DESPLIM algorithm in R
-Version: 1.0.0
+Version: 0.1.0
 Authors@R: 
     person("Sixten Maximillian", "Thestrup", ,"sixten.thestrup@gmail.com", role = c("aut", "cre"))
 Description: Implementation of the DESPLIM algorithm in R.
