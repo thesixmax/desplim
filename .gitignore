@@ -5,3 +5,12 @@
 /tmp/
 docs
 inst/doc
+data-raw/both.7z
+data-raw/both.cpg
+data-raw/both.dbf
+data-raw/both.prj
+data-raw/both.shp
+data-raw/both.shp.xml
+data-raw/both.shx
+data-raw/training_data.RData
+data-raw/training_labels.RData

@@ -22,3 +22,6 @@ Suggests:
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
 URL: https://thesixmax.github.io/desplim/
+Depends: 
+    R (>= 3.5)
+LazyData: true
