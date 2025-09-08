@@ -18,7 +18,11 @@ Suggests:
     knitr,
     rmarkdown,
     future,
-    future.apply
+    future.apply,
+    tidymodels,
+    DALEX,
+    DALEXtra,
+    doFuture
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
 URL: https://thesixmax.github.io/desplim/

@@ -1,0 +1,201 @@
+---
+title: "Creating DESPLIM compactness"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Creating DESPLIM compactness}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+As part of the DESPLIM package, a custom compactness metric has been developed based on the paper by [Kaufman et al (2021)](https://doi.org/10.1111/ajps.12603). This vignette summarises the key steps in the creation of this metric, utilising their [replication data](https://doi.org/10.7910/DVN/FA8FVF), [XGBoost](https://cran.r-project.org/web/packages/xgboost/index.html) and the [tidyverse](https://www.tidymodels.org/) framework.
+
+# Setup and data
+
+The paper by [Kaufman et al (2021)](https://doi.org/10.1111/ajps.12603) employs a novel method to determine a quantitative metric for legislative district compactness designed to replicate the intuitive "you know it when you see it" standard which is often cited in law. The resulting metric is the output of a statistical model trained to predict human rankings of district shapes based on different geometric district features. Overall, it shows promising results for accurately predicting how diverse groups intuitively judge a district's compactness based solely on well-known geometric features.
+
+We found it relevant to include a similar compactness metric in this package, not only as a replication exercise, but because it fits very well into the overall objective of having a deterministic algorithm to split-merge larger districts. However, since the compactness metric will be calculated thousands, if not millions, of times during more complex split-merge problems, we found it natural to rely on a single model file and very fast implementations of the calculation of typical geometrical district features. To obtain this goal, we have implemented a simple XGBoost model as described below, based on the excellent replication data provided by Kaufman et al.
+
+To start, we install and load packages used for both modelling and diagnostics:
+
+```{r setup, message = FALSE}
+library(desplim) # contains cleaned training data
+library(tidymodels) # preferred modelling framework
+library(xgboost) # model engine
+library(DALEX) # model checks and diagnostics
+library(DALEXtra)
+library(doFuture) # parallel processing
+registerDoFuture()
+plan(multisession, workers = parallel::detectCores(logical = FALSE) - 1)
+options(tidymodels.dark = TRUE) # for those of us who love a good dark theme
+```
+
+It is important to note that parallel computation is of course completely optional, but does speed up the model tuning process. Next, we can get a quick glance of the cleaned training data.
+
+```{r explore-data}
+head(desplim_compactness_data)
+hist(desplim_compactness_data$compact)
+```
+
+More details on the data can be found in the [associated data documentation](?desplim_compactness_data). In short, the data processing consists of three steps:
+
+-   Merge the original district shape files with the human-assigned compactness scores from replication data.
+
+-   For each district, compute 10 different geometrical features using [redistmetrics](https://alarm-redist.org/redistmetrics/).
+
+-   Rescale the compactness score to be between 0 (lowest compactness) to 1 (highest compactness).
+
+The resulting data consists of 558 districts. As shown in the plot, the training data contains a close to uniform distribution of compactness, which is essential for any model to learn the full range of possible compactness scores. Also, the data snippet does not reveal an obvious correlation between compactness and any single geometrical feature.
+
+Next, the data is split into training data (80%) and test data (20%), and a simple recipe with no processing steps is created.
+
+```{r data-preparation}
+set.seed(123)
+# Data split
+data_split <- initial_split(desplim_compactness_data, prop = 0.8, strata = compact)
+train_data <- training(data_split)
+test_data <- testing(data_split)
+
+# Recipe
+model_recipe <- recipe(compact ~ ., data = train_data)
+```
+
+# Model specification and tuning
+
+To model the compactness score, we have employed the ever-so-popular XGBoost algorithm. Within the tidyverse framework, we have the option to tune the model parameters as we see fit. For more information, the documentation on the [tune package](https://tune.tidymodels.org/index.html) comes in handy. In this case, since the dataset is small and we do not need to worry about computational issues, it is reasonable to tune all standard model parameters. For the parameter specification, we can apply the defaults provided by the [dials package](https://dials.tidymodels.org/).
+
+```{r xgb-specification}
+# XGBoost specification
+xgb_spec <- boost_tree(
+  trees = tune(),
+  tree_depth = tune(),
+  learn_rate = tune(),
+  mtry = tune(),
+  min_n = tune(),
+  loss_reduction = tune(),
+  sample_size = tune()
+) |>
+  set_engine(
+    "xgboost",
+    objective = "reg:squarederror",
+    verbose = 0
+  ) |>
+  set_mode("regression")
+
+# XGBoost parameter specification
+xgb_params <- parameters(
+  trees(),
+  tree_depth(),
+  learn_rate(),
+  finalize(mtry(), train_data),
+  min_n(),
+  loss_reduction(),
+  sample_prop()
+)
+```
+
+Before tuning the model, we will need to put the model recipe and the model specifications into a workflow. Finally, we also define a 10-fold cross-validation for each iteration. Even though e.g. 5-fold cross-validation would most likely be more than sufficient in our case, we do not have to worry about computing time, especially when utilising parallel processing.
+
+```{r workflow}
+# Workflow
+xgb_workflow <- workflow() |>
+  add_recipe(model_recipe) |>
+  add_model(xgb_spec)
+
+# Cross validation
+set.seed(456)
+cv_folds <- vfold_cv(train_data, v = 10)
+```
+
+Tuning time! For this model, we apply Bayesian tuning. Compared to e.g. brute-force grid search, which tests every combination of a predefined set of parameters, Bayesian tuning applies an adaptive strategy based on probabilistic models to search the most promising areas of the parameter space. RMSE (root mean squared error) is used for model comparison and evaluation.
+
+```{r bayesian-tuning, cache = TRUE}
+set.seed(789)
+tune_results <- tune_bayes(
+  xgb_workflow,
+  resamples = cv_folds,
+  param_info = xgb_params,
+  initial = 10,
+  iter = 100,
+  metrics = metric_set(rmse, mae),
+  control = control_bayes(
+    verbose_iter = TRUE,
+    save_pred = FALSE,
+    save_workflow = FALSE,
+    uncertain = 5,
+    no_improve = 20
+  )
+)
+```
+
+After a few minutes, we can obtain the best parameters from the model with the lowest RMSE.
+
+```{r best-params}
+best_params <- select_best(tune_results, metric = "rmse")
+print(best_params)
+```
+
+We wrap up the modelling by finalising the workflow, fit on the test data and collect predictions.
+
+```{r finalisation}
+final_xgb_wf <- finalize_workflow(xgb_workflow, best_params)
+final_fit <- last_fit(final_xgb_wf, data_split)
+test_predictions <- collect_predictions(final_fit)
+final_trained_workflow <- extract_workflow(final_fit)
+```
+
+# Model diagnostics
+
+We can carry out a few checks to investigate the final fit of the model. First, the test metrics:
+
+```{r metrics}
+test_metrics <- collect_metrics(final_fit)
+```
+
+Our RMSE is reasonably low, and the R-squared consequentially high. We can plot the predicted compactness versus actual compactness to discover any regions where the model performs better or worse than expected.
+
+```{r predictions}
+predicted_vs_actual_plot <- ggplot(
+  test_predictions,
+  aes(x = compact, y = .pred)
+) +
+  geom_point(alpha = 0.5, color = "dodgerblue") +
+  geom_abline(lty = 2, color = "red", linewidth = 1) +
+  labs(
+    title = "Predicted vs. Actual Compactness on test data",
+    x = "Actual compactness",
+    y = "Predicted compactness"
+  ) +
+  theme_minimal(base_size = 14) +
+  coord_fixed()
+print(predicted_vs_actual_plot)
+```
+
+Aside from a couple of outliers, the model predict evenly well across all compactness scores. Finally, we can check which geographical feature is the most important in determining compactness:
+
+```{r feature-importance}
+train_predictors <- train_data |> select(-compact)
+train_outcome <- train_data$compact
+explainer <- explain_tidymodels(
+  final_trained_workflow,
+  data = train_predictors,
+  y = train_outcome,
+  label = "XGBoost"
+)
+feature_importance <- model_parts(explainer)
+plot(feature_importance, max_vars = Inf)
+```
+
+We find that Polsby-Popper and Convex Hull are the most important features. However, all geographical features plays a role in predicting the compactness score.
+
+To create a single XGBoost model object, we can extract the fit engine, to be saved and used for future predictions.
+
+```{r save-engine}
+final_xgb_model_engine <- extract_fit_engine(final_trained_workflow)
+```
