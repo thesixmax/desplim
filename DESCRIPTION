@@ -22,7 +22,10 @@ Suggests:
     tidymodels,
     DALEX,
     DALEXtra,
-    doFuture
+    doFuture,
+    dplyr,
+    ggplot2,
+    patchwork
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
 URL: https://thesixmax.github.io/desplim/
