@@ -41,7 +41,9 @@ districts_shape <- read_sf(paste0(path, "both.shp"))
 districts_data <- (do.call(rbind, mylist))[do.call(rbind, mylist)$parts == 1, ]
 
 ### Filter districts
-districts_filtered <- districts_shape[districts_shape$NAME %in% districts_data$district, ]
+districts_filtered <- districts_shape[
+  districts_shape$NAME %in% districts_data$district,
+]
 districts_merged <- merge(
   districts_filtered,
   train_labels,
@@ -57,25 +59,58 @@ districts_merged <- merge(
   all.x = TRUE
 )
 districts_merged <- st_cast(districts_merged, "POLYGON", warn = FALSE)
-districts <- districts_merged[, c("NAME", "compactness", "geometry")]
+districts_merged$compact <- 1 - (districts_merged$compactness / 100)
+desplim_sf_data <- districts_merged[
+  sample(1:nrow(districts_merged), 25),
+  c("compact", "geometry")
+]
 
 ### Calculate metrics
-districts$id <- seq(1:nrow(districts))
-districts$boyce <- comp_bc(plans = districts$id, shp = districts)
-districts$box_reock <- comp_box_reock(plans = districts$id, shp = districts)
-districts$hull <- comp_ch(plans = districts$id, shp = districts)
-districts$len_wid <- comp_lw(plans = districts$id, shp = districts)
-districts$polsby <- comp_polsby(plans = districts$id, shp = districts)
-districts$reock <- comp_reock(plans = districts$id, shp = districts)
-districts$schwartz <- comp_schwartz(plans = districts$id, shp = districts)
-districts$skew <- comp_skew(plans = districts$id, shp = districts)
-districts$sym_x <- comp_x_sym(plans = districts$id, shp = districts)
-districts$sym_y <- comp_y_sym(plans = districts$id, shp = districts)
+districts_merged$id <- seq(1:nrow(districts_merged))
+districts_merged$boyce <- comp_bc(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
+districts_merged$box_reock <- comp_box_reock(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
+districts_merged$hull <- comp_ch(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
+districts_merged$len_wid <- comp_lw(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
+districts_merged$polsby <- comp_polsby(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
+districts_merged$reock <- comp_reock(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
+districts_merged$schwartz <- comp_schwartz(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
+districts_merged$skew <- comp_skew(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
+districts_merged$sym_x <- comp_x_sym(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
+districts_merged$sym_y <- comp_y_sym(
+  plans = districts_merged$id,
+  shp = districts_merged
+)
 
 ### Create model data and rescale compactness
-districts_nogeom <- st_drop_geometry(districts)
-districts_nogeom$compact <- 1 - (districts_nogeom$compactness / 100)
-desplim_compactness_data <- districts_nogeom[, c(
+districts_nogeom <- st_drop_geometry(districts_merged)
+desplim_compact_data <- districts_nogeom[, c(
   "compact",
   "boyce",
   "box_reock",
@@ -90,4 +125,5 @@ desplim_compactness_data <- districts_nogeom[, c(
 )]
 
 ### Write data
-usethis::use_data(desplim_compactness_data, overwrite = TRUE)
+usethis::use_data(desplim_sf_data, overwrite = TRUE)
+usethis::use_data(desplim_compact_data, overwrite = TRUE)
