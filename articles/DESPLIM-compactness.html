@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Creating DESPLIM compactness • desplim</title>
+<title>Understanding the DESPLIM compactness score • desplim</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Creating DESPLIM compactness">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Understanding the DESPLIM compactness score">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,7 +33,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/DESPLIM-compactness.html">Creating DESPLIM compactness</a></li>
+<li><a class="dropdown-item" href="../articles/DESPLIM-compactness.html">Understanding the DESPLIM compactness score</a></li>
   </ul>
 </li>
       </ul>
@@ -54,7 +54,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Creating DESPLIM compactness</h1>
+      <h1>Understanding the DESPLIM compactness score</h1>
             
       
 
@@ -63,52 +63,48 @@
 
     
     
-<p>As part of the DESPLIM package, a custom compactness metric has been
-developed based on the paper by <a href="https://doi.org/10.1111/ajps.12603" class="external-link">Kaufman et al (2021)</a>. This
-vignette summarises the key steps in the creation of this metric,
-utilising their <a href="https://doi.org/10.7910/DVN/FA8FVF" class="external-link">replication
-data</a>, <a href="https://cran.r-project.org/web/packages/xgboost/index.html" class="external-link">XGBoost</a>
-and the <a href="https://www.tidymodels.org/" class="external-link">tidyverse</a>
-framework.</p>
+<p>When evaluating districts, “compactness” is an important feature. But
+what makes a district compact? Often, it comes down to the human
+intuition of “you know it when you see it”, which has historically been
+hard to quantify.</p>
+<p>To provide a reliable and data-driven measure of compactness, the
+<code>desplim</code> package includes a compactness score that directly
+models this human intuition. Our approach is based on the work of <a href="https://doi.org/10.1111/ajps.12603" class="external-link">Kaufman et al. (2021)</a> who
+successfully trained a model to predict human rankings of district
+shapes using common geometric features.</p>
+<p>The <code>desplim</code> algorithm may need to calculate several
+thousands, if not millions, of compactness scores during complex
+split-merge problems. For this reason, we built our own lightweight and
+computationally efficient model using <a href="https://cran.r-project.org/web/packages/xgboost/index.html" class="external-link">XGBoost</a>.</p>
+<p>This vignette provides an overview of how the metric was developed,
+using the original <a href="https://doi.org/10.7910/DVN/FA8FVF" class="external-link">replication data</a> and the
+<a href="https://www.tidymodels.org/" class="external-link">tidyverse</a> framework.</p>
 <div class="section level2">
-<h2 id="setup-and-data">Setup and data<a class="anchor" aria-label="anchor" href="#setup-and-data"></a>
+<h2 id="data-and-setup">1. Data and Setup<a class="anchor" aria-label="anchor" href="#data-and-setup"></a>
 </h2>
-<p>The paper by <a href="https://doi.org/10.1111/ajps.12603" class="external-link">Kaufman et
-al (2021)</a> employs a novel method to determine a quantitative metric
-for legislative district compactness designed to replicate the intuitive
-“you know it when you see it” standard which is often cited in law. The
-resulting metric is the output of a statistical model trained to predict
-human rankings of district shapes based on different geometric district
-features. Overall, it shows promising results for accurately predicting
-how diverse groups intuitively judge a district’s compactness based
-solely on well-known geometric features.</p>
-<p>We found it relevant to include a similar compactness metric in this
-package, not only as a replication exercise, but because it fits very
-well into the overall objective of having a deterministic algorithm to
-split-merge larger districts. However, since the compactness metric will
-be calculated thousands, if not millions, of times during more complex
-split-merge problems, we found it natural to rely on a single model file
-and very fast implementations of the calculation of typical geometrical
-district features. To obtain this goal, we have implemented a simple
-XGBoost model as described below, based on the excellent replication
-data provided by Kaufman et al.</p>
-<p>To start, we install and load packages used for both modelling and
-diagnostics:</p>
+<p>The model is trained on the <a href="https://doi.org/10.7910/DVN/FA8FVF" class="external-link">replication data</a> from <a href="https://doi.org/10.1111/ajps.12603" class="external-link">Kaufman et al. (2021)</a>. A
+cleaned and pre-processed version of this dataset is included directly
+in <code>desplim</code> as <code>desplim_compact_data</code>.</p>
+<p>First, let’s load the libraries required for modeling and
+diagnostics.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://thesixmax.github.io/desplim/">desplim</a></span><span class="op">)</span> <span class="co"># contains cleaned training data</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidymodels.tidymodels.org" class="external-link">tidymodels</a></span><span class="op">)</span> <span class="co"># preferred modelling framework</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://thesixmax.github.io/desplim/">desplim</a></span><span class="op">)</span> <span class="co"># contains the cleaned training data</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidymodels.tidymodels.org" class="external-link">tidymodels</a></span><span class="op">)</span> <span class="co"># core framework for modelling and pre-processing</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dmlc/xgboost" class="external-link">xgboost</a></span><span class="op">)</span> <span class="co"># model engine</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://modeloriented.github.io/DALEX/" class="external-link">DALEX</a></span><span class="op">)</span> <span class="co"># model checks and diagnostics</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ModelOriented.github.io/DALEXtra/" class="external-link">DALEXtra</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://modeloriented.github.io/DALEX/" class="external-link">DALEX</a></span><span class="op">)</span> <span class="co"># model explainability</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ModelOriented.github.io/DALEXtra/" class="external-link">DALEXtra</a></span><span class="op">)</span> <span class="co"># helper for DALEX</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://doFuture.futureverse.org" class="external-link">doFuture</a></span><span class="op">)</span> <span class="co"># parallel processing</span></span>
+<span></span>
+<span><span class="co"># Set up parallel processing</span></span>
 <span><span class="fu"><a href="https://doFuture.futureverse.org/reference/registerDoFuture.html" class="external-link">registerDoFuture</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">multisession</span>, workers <span class="op">=</span> <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span>logical <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>tidymodels.dark <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># for those of us who love a good dark theme</span></span></code></pre></div>
-<p>It is important to note that parallel computation is of course
-completely optional, but does speed up the model tuning process. Next,
-we can get a quick glance of the cleaned training data.</p>
+<span><span class="va">n_cores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu">parallel</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/parallel/detectCores.html" class="external-link">detectCores</a></span><span class="op">(</span>logical <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">multisession</span>, workers <span class="op">=</span> <span class="va">n_cores</span><span class="op">)</span></span></code></pre></div>
+<p>The <code>desplim_compact_data</code> table contains the
+human-assigned compactness score (<code>compact</code>), ranging from 0
+(least compact) to 1 (most compact) and 10 geometric features for 558
+unique district shapes.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">desplim_compactness_data</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">desplim_compact_data</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     compact     boyce box_reock      hull   len_wid    polsby     reock</span></span>
 <span><span class="co">#&gt; 1 0.0300000 0.7649550 0.4896064 0.6262075 0.7534825 0.1145953 0.4057489</span></span>
 <span><span class="co">#&gt; 2 0.2745098 0.7775373 0.4381054 0.6984327 0.8969073 0.2021440 0.3742773</span></span>
@@ -122,31 +118,67 @@ we can get a quick glance of the cleaned training data.</p>
 <span><span class="co">#&gt; 3 0.3548220 0.2738264 0.5287228 0.5271888</span></span>
 <span><span class="co">#&gt; 4 0.4328039 0.3005736 0.4305575 0.3530961</span></span>
 <span><span class="co">#&gt; 5 0.3192339 0.2754020 0.4761292 0.4987708</span></span>
-<span><span class="co">#&gt; 6 0.3819629 0.1683645 0.6358400 0.4629123</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">desplim_compactness_data</span><span class="op">$</span><span class="va">compact</span><span class="op">)</span></span></code></pre></div>
-<p><img src="DESPLIM-compactness_files/figure-html/explore-data-1.png" width="700"></p>
-<p>More details on the data can be found in the <a href="?desplim_compactness_data">associated data documentation</a>. In
-short, the data processing consists of three steps:</p>
-<ul>
-<li><p>Merge the original district shape files with the human-assigned
-compactness scores from replication data.</p></li>
-<li><p>For each district, compute 10 different geometrical features
-using <a href="https://alarm-redist.org/redistmetrics/" class="external-link">redistmetrics</a>.</p></li>
-<li><p>Rescale the compactness score to be between 0 (lowest
-compactness) to 1 (highest compactness).</p></li>
-</ul>
-<p>The resulting data consists of 558 districts. As shown in the plot,
-the training data contains a close to uniform distribution of
-compactness, which is essential for any model to learn the full range of
-possible compactness scores. Also, the data snippet does not reveal an
-obvious correlation between compactness and any single geometrical
-feature.</p>
-<p>Next, the data is split into training data (80%) and test data (20%),
-and a simple recipe with no processing steps is created.</p>
+<span><span class="co">#&gt; 6 0.3819629 0.1683645 0.6358400 0.4629123</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">desplim_compact_data</span><span class="op">$</span><span class="va">compact</span><span class="op">)</span></span></code></pre></div>
+<p><img src="DESPLIM-compactness_files/figure-html/explore-hist-1.png" width="700"></p>
+<p>The histogram shows a relatively uniform distribution of compactness
+scores, which is ideal for training a model that can recognise the full
+spectrum from non-compact to highly compact shapes. As the output
+suggests, no single geometric feature is a perfect predictor on its
+own.</p>
+<p>The following plots show three sample districts from the dataset: one
+of the least compact, one with a medium score, and one of the most
+compact. 25 sample districs are provided in the
+<code>desplim_sf_data</code> dataset.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a></span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Find districts with high, medium, and low compactness</span></span>
+<span><span class="va">highly_compact</span> <span class="op">&lt;-</span> <span class="va">desplim_sf_data</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_max</a></span><span class="op">(</span>order_by <span class="op">=</span> <span class="va">compact</span>, n <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">moderately_compact</span> <span class="op">&lt;-</span> <span class="va">desplim_sf_data</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/between.html" class="external-link">between</a></span><span class="op">(</span><span class="va">compact</span>, <span class="fl">0.4</span>, <span class="fl">0.6</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">non_compact</span> <span class="op">&lt;-</span> <span class="va">desplim_sf_data</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_min</a></span><span class="op">(</span>order_by <span class="op">=</span> <span class="va">compact</span>, n <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create plots</span></span>
+<span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">highly_compact</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"High:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">highly_compact</span><span class="op">$</span><span class="va">compact</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">moderately_compact</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Medium:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">moderately_compact</span><span class="op">$</span><span class="va">compact</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">non_compact</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Low:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">non_compact</span><span class="op">$</span><span class="va">compact</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p1</span> <span class="op">+</span> <span class="va">p2</span> <span class="op">+</span> <span class="va">p3</span></span></code></pre></div>
+<p><img src="DESPLIM-compactness_files/figure-html/explore-districts-1.png" width="700"></p>
+<p>As the plots demonstrate, the scores align well with our visual
+intuition. The district with the low score is the most irregular, while
+the district with the high score is much more regular, albeit not
+perfectly symmetrical.</p>
+<p>Finally, we’ll split the data into a training set (80%) and a testing
+set (20%). We stratify by the compact variable to ensure both sets have
+a similar distribution of scores.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
 <span><span class="co"># Data split</span></span>
-<span><span class="va">data_split</span> <span class="op">&lt;-</span> <span class="fu">initial_split</span><span class="op">(</span><span class="va">desplim_compactness_data</span>, prop <span class="op">=</span> <span class="fl">0.8</span>, strata <span class="op">=</span> <span class="va">compact</span><span class="op">)</span></span>
+<span><span class="va">data_split</span> <span class="op">&lt;-</span> <span class="fu">initial_split</span><span class="op">(</span><span class="va">desplim_compact_data</span>, prop <span class="op">=</span> <span class="fl">0.8</span>, strata <span class="op">=</span> <span class="va">compact</span><span class="op">)</span></span>
 <span><span class="va">train_data</span> <span class="op">&lt;-</span> <span class="fu">training</span><span class="op">(</span><span class="va">data_split</span><span class="op">)</span></span>
 <span><span class="va">test_data</span> <span class="op">&lt;-</span> <span class="fu">testing</span><span class="op">(</span><span class="va">data_split</span><span class="op">)</span></span>
 <span></span>
@@ -154,18 +186,27 @@ and a simple recipe with no processing steps is created.</p>
 <span><span class="va">model_recipe</span> <span class="op">&lt;-</span> <span class="fu">recipe</span><span class="op">(</span><span class="va">compact</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">train_data</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="model-specification-and-tuning">Model specification and tuning<a class="anchor" aria-label="anchor" href="#model-specification-and-tuning"></a>
+<h2 id="model-specification-and-tuning">2. Model specification and tuning<a class="anchor" aria-label="anchor" href="#model-specification-and-tuning"></a>
 </h2>
-<p>To model the compactness score, we have employed the ever-so-popular
-XGBoost algorithm. Within the tidyverse framework, we have the option to
-tune the model parameters as we see fit. For more information, the
-documentation on the <a href="https://tune.tidymodels.org/index.html" class="external-link">tune package</a> comes in
-handy. In this case, since the dataset is small and we do not need to
-worry about computational issues, it is reasonable to tune all standard
-model parameters. For the parameter specification, we can apply the
-defaults provided by the <a href="https://dials.tidymodels.org/" class="external-link">dials
+<p>With the data prepared, we can train a model to predict the
+compactness score based on the 10 geometric features. We’ll use the well
+known XGBoost algorithm for this task. The process involves three main
+steps: building a workflow, tuning hyperparameters, and finalising the
+model.</p>
+<div class="section level3">
+<h3 id="modelling-workflow">2.1 Modelling workflow<a class="anchor" aria-label="anchor" href="#modelling-workflow"></a>
+</h3>
+<p>First, we define our model specification using tidymodels. We mark
+standard hyperparameters for tuning, which allows us to find the best
+combination for our data. For more information, the documentation on the
+<a href="https://tune.tidymodels.org/index.html" class="external-link">tune package</a> comes
+in handy. For the parameter specification, we apply the defaults
+provided by the <a href="https://dials.tidymodels.org/" class="external-link">dials
 package</a>.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>We then bundle our (simple) pre-processing recipe and the model
+specification into a single workflow object. Finally, we create a
+10-fold cross-validation.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># XGBoost specification</span></span>
 <span><span class="va">xgb_spec</span> <span class="op">&lt;-</span> <span class="fu">boost_tree</span><span class="op">(</span></span>
 <span>  trees <span class="op">=</span> <span class="fu">tune</span><span class="op">(</span><span class="op">)</span>,</span>
@@ -192,15 +233,9 @@ package</a>.</p>
 <span>  <span class="fu">min_n</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="fu">loss_reduction</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="fu">sample_prop</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>Before tuning the model, we will need to put the model recipe and the
-model specifications into a workflow. Finally, we also define a 10-fold
-cross-validation for each iteration. Even though e.g. 5-fold
-cross-validation would most likely be more than sufficient in our case,
-we do not have to worry about computing time, especially when utilising
-parallel processing.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Workflow</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Workflow</span></span>
 <span><span class="va">xgb_workflow</span> <span class="op">&lt;-</span> <span class="fu">workflow</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">add_recipe</span><span class="op">(</span><span class="va">model_recipe</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">add_model</span><span class="op">(</span><span class="va">xgb_spec</span><span class="op">)</span></span>
@@ -208,13 +243,18 @@ parallel processing.</p>
 <span><span class="co"># Cross validation</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">456</span><span class="op">)</span></span>
 <span><span class="va">cv_folds</span> <span class="op">&lt;-</span> <span class="fu">vfold_cv</span><span class="op">(</span><span class="va">train_data</span>, v <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
-<p>Tuning time! For this model, we apply Bayesian tuning. Compared to
-e.g. brute-force grid search, which tests every combination of a
-predefined set of parameters, Bayesian tuning applies an adaptive
-strategy based on probabilistic models to search the most promising
-areas of the parameter space. RMSE (root mean squared error) is used for
-model comparison and evaluation.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+</div>
+<div class="section level3">
+<h3 id="bayesian-hyperparameter-tuning">2.2 Bayesian hyperparameter tuning<a class="anchor" aria-label="anchor" href="#bayesian-hyperparameter-tuning"></a>
+</h3>
+<p>Instead of testing every possible combination of parameters (through
+a grid search), we’ll use Bayesian optimisation. This is an adaptive
+method that uses the results from past iterations to search for the most
+promising parameter combinations.</p>
+<p>We’ll let it run for 100 iterations, but it will stop early if it
+doesn’t find a better model after 20 rounds (no_improve = 20). We’ll use
+Root Mean Squared Error (RMSE) as the primary metric to optimise.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">789</span><span class="op">)</span></span>
 <span><span class="va">tune_results</span> <span class="op">&lt;-</span> <span class="fu">tune_bayes</span><span class="op">(</span></span>
 <span>  <span class="va">xgb_workflow</span>,</span>
@@ -230,494 +270,102 @@ model comparison and evaluation.</p>
 <span>    uncertain <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>    no_improve <span class="op">=</span> <span class="fl">20</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Optimizing rmse using the expected improvement</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 1</span> ─────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1078 (@iter 0)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=621, tree_depth=1, learn_rate=0.0987, mtry=10, min_n=19,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=2.94e-06, sample_size=0.65</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BB0000;">♥</span> Newest results:  rmse=0.1072 (+/-0.00436)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 2</span> ─────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1072 (@iter 1)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1000, tree_depth=6, learn_rate=0.0423, mtry=11, min_n=26,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=9.13e-06, sample_size=0.804</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1103 (+/-0.00441)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 3</span> ─────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1072 (@iter 1)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1461, tree_depth=4, learn_rate=0.0221, mtry=1, min_n=11,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=5.05e-06, sample_size=0.156</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BB0000;">♥</span> Newest results:  rmse=0.1033 (+/-0.00473)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 4</span> ─────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1786, tree_depth=1, learn_rate=0.00586, mtry=7, min_n=20,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=3.44e-06, sample_size=0.308</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1038 (+/-0.00448)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 5</span> ─────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1613, tree_depth=2, learn_rate=0.011, mtry=5, min_n=17,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.74e-06, sample_size=0.559</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1044 (+/-0.00437)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 6</span> ─────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=671, tree_depth=1, learn_rate=0.0141, mtry=5, min_n=27,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=3.24e-06, sample_size=0.203</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1129 (+/-0.00401)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 7</span> ─────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1733, tree_depth=2, learn_rate=0.0493, mtry=8, min_n=22,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=2.27e-05, sample_size=0.507</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1115 (+/-0.00443)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 8</span> ─────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1827, tree_depth=13, learn_rate=0.0289, mtry=8, min_n=16,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=4.27e-06, sample_size=0.485</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1118 (+/-0.00393)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 9</span> ─────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">?⃝</span> Uncertainty sample</span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1513, tree_depth=14, learn_rate=4.22e-09, mtry=7, min_n=40,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=3.39e-10, sample_size=0.863</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.2816 (+/-0.00561)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 10</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1828, tree_depth=5, learn_rate=0.0283, mtry=6, min_n=34,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=2.62e-06, sample_size=0.478</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1092 (+/-0.0045)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 11</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1278, tree_depth=5, learn_rate=0.0132, mtry=6, min_n=10,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=7.74e-06, sample_size=0.603</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1075 (+/-0.00382)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 12</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1977, tree_depth=5, learn_rate=0.0417, mtry=1, min_n=7,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=4.16e-06, sample_size=0.38</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1102 (+/-0.00355)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 13</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1033 (@iter 3)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=37, tree_depth=3, learn_rate=0.0886, mtry=9, min_n=4,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=0.000315, sample_size=0.331</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BB0000;">♥</span> Newest results:  rmse=0.1028 (+/-0.00397)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 14</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1028 (@iter 13)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=298, tree_depth=2, learn_rate=0.0953, mtry=6, min_n=31,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.5e-05, sample_size=0.938</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1067 (+/-0.00467)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 15</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1028 (@iter 13)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1745, tree_depth=5, learn_rate=0.00753, mtry=9, min_n=8,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=0.0015, sample_size=0.77</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1077 (+/-0.00411)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 16</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1028 (@iter 13)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1200, tree_depth=7, learn_rate=0.00656, mtry=6, min_n=11,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.21e-10, sample_size=0.249</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BB0000;">♥</span> Newest results:  rmse=0.1027 (+/-0.00445)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 17</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1090, tree_depth=3, learn_rate=0.00819, mtry=10, min_n=6,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.49e-10, sample_size=0.751</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1046 (+/-0.00417)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 18</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1574, tree_depth=13, learn_rate=0.0056, mtry=10, min_n=11,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=3.21e-10, sample_size=0.61</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1069 (+/-0.00408)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 19</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1514, tree_depth=2, learn_rate=0.0232, mtry=9, min_n=7,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=3.92, sample_size=0.247</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.2146 (+/-0.00476)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 20</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1558, tree_depth=7, learn_rate=0.044, mtry=3, min_n=27,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.13e-10, sample_size=0.687</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1108 (+/-0.00402)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 21</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1581, tree_depth=3, learn_rate=0.00782, mtry=4, min_n=11,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=7.2e-05, sample_size=0.914</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1049 (+/-0.00441)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 22</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">?⃝</span> Uncertainty sample</span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1281, tree_depth=13, learn_rate=5.63e-08, mtry=7, min_n=30,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=3.76e-06, sample_size=0.767</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.2816 (+/-0.00561)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 23</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1981, tree_depth=1, learn_rate=0.0132, mtry=5, min_n=24,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=2.15e-10, sample_size=0.123</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1191 (+/-0.00451)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 24</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=13, tree_depth=7, learn_rate=0.0135, mtry=9, min_n=18,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=0.000708, sample_size=0.609</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.245 (+/-0.00459)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 25</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=173, tree_depth=7, learn_rate=0.0847, mtry=10, min_n=36,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.38e-07, sample_size=0.495</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1064 (+/-0.00381)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 26</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=438, tree_depth=3, learn_rate=0.0661, mtry=2, min_n=5,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.17e-07, sample_size=0.679</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1091 (+/-0.00412)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 27</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1231, tree_depth=2, learn_rate=0.033, mtry=3, min_n=13,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.89e-10, sample_size=0.255</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1059 (+/-0.00421)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 28</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">?⃝</span> Uncertainty sample</span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1032, tree_depth=4, learn_rate=3.03e-10, mtry=2, min_n=25,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=6.11, sample_size=0.776</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.2816 (+/-0.00561)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 29</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=873, tree_depth=6, learn_rate=0.0115, mtry=5, min_n=31,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=5.31e-08, sample_size=0.297</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1077 (+/-0.00416)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 30</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=898, tree_depth=7, learn_rate=0.0809, mtry=4, min_n=3,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=0.00013, sample_size=0.811</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1086 (+/-0.0038)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 31</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=747, tree_depth=3, learn_rate=0.063, mtry=8, min_n=35,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.62e-08, sample_size=0.969</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1099 (+/-0.00392)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 32</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1824, tree_depth=11, learn_rate=0.00575, mtry=6, min_n=38,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=2.01e-07, sample_size=0.369</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1072 (+/-0.00421)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 33</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=610, tree_depth=6, learn_rate=0.00522, mtry=8, min_n=29,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=2.11e-06, sample_size=0.994</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1065 (+/-0.00391)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 34</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">?⃝</span> Uncertainty sample</span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=1860, tree_depth=14, learn_rate=0.00014, mtry=3, min_n=28,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=1.03e-10, sample_size=0.856</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.2314 (+/-0.00422)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 35</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=967, tree_depth=2, learn_rate=0.00454, mtry=8, min_n=5,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=2.07e-05, sample_size=0.12</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.103 (+/-0.00426)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ── <span style="font-weight: bold;">Iteration 36</span> ────────────────────────────────────────────────────────────────</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Current best:       rmse=0.1027 (@iter 16)</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Gaussian process model</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Generating 5000 candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Predicted candidates</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">trees=562, tree_depth=3, learn_rate=0.0069, mtry=4, min_n=40,</span></span></span>
-<span><span class="co">#&gt;   <span style="color: #BBBBBB;">loss_reduction=4.23e-07, sample_size=0.342</span></span></span>
-<span><span class="co">#&gt; <span style="color: #0000BB;">i</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✓</span> <span style="color: #BBBBBB;">Estimating performance</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;">ⓧ</span> Newest results:  rmse=0.1111 (+/-0.00376)</span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> No improvement for 20 iterations; returning current results.</span></span></code></pre></div>
-<p>After a few minutes, we can obtain the best parameters from the model
-with the lowest RMSE.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">best_params</span> <span class="op">&lt;-</span> <span class="fu">select_best</span><span class="op">(</span><span class="va">tune_results</span>, metric <span class="op">=</span> <span class="st">"rmse"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="finalising-the-model">2.3 Finalising the model<a class="anchor" aria-label="anchor" href="#finalising-the-model"></a>
+</h3>
+<p>Once the tuning process is complete, we select the parameters that
+resulted in the lowest RMSE. We then use the <code>last_fit()</code>
+function, which is a convenient helper that performs the final two
+steps:</p>
+<ul>
+<li><p>Fits the finalised workflow (with the best parameters) on the
+entire training set.</p></li>
+<li><p>Evaluates the performance of this final model on the held-out
+test set.</p></li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Select the best parameters</span></span>
+<span><span class="va">best_params</span> <span class="op">&lt;-</span> <span class="fu">select_best</span><span class="op">(</span><span class="va">tune_results</span>, metric <span class="op">=</span> <span class="st">"rmse"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">best_params</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
 <span><span class="co">#&gt;   trees tree_depth learn_rate  mtry min_n loss_reduction sample_size .config</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  <span style="text-decoration: underline;">1</span>200          7    0.006<span style="text-decoration: underline;">56</span>     6    11       1.21<span style="color: #949494;">e</span><span style="color: #BB0000;">-10</span>       0.249 iter016</span></span></code></pre></div>
-<p>We wrap up the modelling by finalising the workflow, fit on the test
-data and collect predictions.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">final_xgb_wf</span> <span class="op">&lt;-</span> <span class="fu">finalize_workflow</span><span class="op">(</span><span class="va">xgb_workflow</span>, <span class="va">best_params</span><span class="op">)</span></span>
-<span><span class="va">final_fit</span> <span class="op">&lt;-</span> <span class="fu">last_fit</span><span class="op">(</span><span class="va">final_xgb_wf</span>, <span class="va">data_split</span><span class="op">)</span></span>
-<span><span class="va">test_predictions</span> <span class="op">&lt;-</span> <span class="fu">collect_predictions</span><span class="op">(</span><span class="va">final_fit</span><span class="op">)</span></span>
-<span><span class="va">final_trained_workflow</span> <span class="op">&lt;-</span> <span class="fu">extract_workflow</span><span class="op">(</span><span class="va">final_fit</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>  <span style="text-decoration: underline;">1</span>200          7    0.006<span style="text-decoration: underline;">56</span>     6    11       1.21<span style="color: #949494;">e</span><span style="color: #BB0000;">-10</span>       0.249 iter016</span></span>
+<span></span>
+<span><span class="co"># Finalise the workflow</span></span>
+<span><span class="va">final_xgb_wf</span> <span class="op">&lt;-</span> <span class="fu">finalize_workflow</span><span class="op">(</span><span class="va">xgb_workflow</span>, <span class="va">best_params</span><span class="op">)</span></span>
+<span><span class="va">final_fit</span> <span class="op">&lt;-</span> <span class="fu">last_fit</span><span class="op">(</span><span class="va">final_xgb_wf</span>, <span class="va">data_split</span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
-<h2 id="model-diagnostics">Model diagnostics<a class="anchor" aria-label="anchor" href="#model-diagnostics"></a>
+<h2 id="model-performance">3. Model performance<a class="anchor" aria-label="anchor" href="#model-performance"></a>
 </h2>
-<p>We can carry out a few checks to investigate the final fit of the
-model. First, the test metrics:</p>
+<p>Having a final, trained model, we need to evaluate its performance on
+the held-out test data. This tells us how well the model is likely to
+perform on new, unseen districts.</p>
+<div class="section level3">
+<h3 id="overall-performance-metrics">3.1 Overall performance metrics<a class="anchor" aria-label="anchor" href="#overall-performance-metrics"></a>
+</h3>
+<p>First, we’ll examine the summary performance metrics. The
+<code>collect_metrics()</code> function gives us the Root Mean Squared
+Error (RMSE) and the R-squared from the test set.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">test_metrics</span> <span class="op">&lt;-</span> <span class="fu">collect_metrics</span><span class="op">(</span><span class="va">final_fit</span><span class="op">)</span></span></code></pre></div>
-<p>Our RMSE is reasonably low, and the R-squared consequentially high.
-We can plot the predicted compactness versus actual compactness to
-discover any regions where the model performs better or worse than
-expected.</p>
+<code class="sourceCode R"><span><span class="va">test_metrics</span> <span class="op">&lt;-</span> <span class="fu">collect_metrics</span><span class="op">(</span><span class="va">final_fit</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">test_metrics</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 4</span></span></span>
+<span><span class="co">#&gt;   .metric .estimator .estimate .config        </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> rmse    standard      0.093<span style="text-decoration: underline;">3</span> pre0_mod0_post0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> rsq     standard      0.894  pre0_mod0_post0</span></span></code></pre></div>
+<p>The low RMSE and high R-squared indicate that the model’s predictions
+are, on average, very close to our target compactness scores.</p>
+</div>
+<div class="section level3">
+<h3 id="predicted-versus-actual-scores">3.2 Predicted versus actual scores<a class="anchor" aria-label="anchor" href="#predicted-versus-actual-scores"></a>
+</h3>
+<p>Metrics give us a high-level summary, but a plot of predicted versus
+actual values helps us better understand the model predictions across
+compactness scores.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">predicted_vs_actual_plot</span> <span class="op">&lt;-</span> <span class="fu">ggplot</span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># Collect the individual predictions on the test set</span></span>
+<span><span class="va">test_predictions</span> <span class="op">&lt;-</span> <span class="fu">collect_predictions</span><span class="op">(</span><span class="va">final_fit</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create the plot</span></span>
+<span><span class="va">predicted_vs_actual_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
 <span>  <span class="va">test_predictions</span>,</span>
-<span>  <span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">compact</span>, y <span class="op">=</span> <span class="va">.pred</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">compact</span>, y <span class="op">=</span> <span class="va">.pred</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">geom_point</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, color <span class="op">=</span> <span class="st">"dodgerblue"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">geom_abline</span><span class="op">(</span>lty <span class="op">=</span> <span class="fl">2</span>, color <span class="op">=</span> <span class="st">"red"</span>, linewidth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">labs</span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Predicted vs. Actual Compactness on test data"</span>,</span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span>, color <span class="op">=</span> <span class="st">"dodgerblue"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_abline</a></span><span class="op">(</span>lty <span class="op">=</span> <span class="fl">2</span>, color <span class="op">=</span> <span class="st">"red"</span>, linewidth <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Predicted vs. actual compactness"</span>,</span>
 <span>    x <span class="op">=</span> <span class="st">"Actual compactness"</span>,</span>
 <span>    y <span class="op">=</span> <span class="st">"Predicted compactness"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">theme_minimal</span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">coord_fixed</span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">predicted_vs_actual_plot</span><span class="op">)</span></span></code></pre></div>
 <p><img src="DESPLIM-compactness_files/figure-html/predictions-1.png" width="700"></p>
-<p>Aside from a couple of outliers, the model predict evenly well across
-all compactness scores. Finally, we can check which geographical feature
-is the most important in determining compactness:</p>
+<p>The plot confirms the presumed good performance. Aside from a few
+outliers, there are no major areas where the model systematically over-
+or under-predicts, suggesting it generalises well across the entire
+range of compactness scores.</p>
+</div>
+<div class="section level3">
+<h3 id="feature-importance">3.3 Feature importance<a class="anchor" aria-label="anchor" href="#feature-importance"></a>
+</h3>
+<p>Finally, we want to understand what geometric features the model
+relies on most to make its predictions. We can calculate feature
+importance by measuring how much the model’s prediction error increases
+when a single feature’s values are randomly shuffled.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">train_predictors</span> <span class="op">&lt;-</span> <span class="va">train_data</span> <span class="op">|&gt;</span> <span class="fu">select</span><span class="op">(</span><span class="op">-</span><span class="va">compact</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Extract the finalised and trained workflow</span></span>
+<span><span class="va">final_trained_workflow</span> <span class="op">&lt;-</span> <span class="fu">extract_workflow</span><span class="op">(</span><span class="va">final_fit</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create DALEX explainer and feature importance</span></span>
+<span><span class="va">train_predictors</span> <span class="op">&lt;-</span> <span class="va">train_data</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">compact</span><span class="op">)</span></span>
 <span><span class="va">train_outcome</span> <span class="op">&lt;-</span> <span class="va">train_data</span><span class="op">$</span><span class="va">compact</span></span>
 <span><span class="va">explainer</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ModelOriented.github.io/DALEXtra/reference/explain_tidymodels.html" class="external-link">explain_tidymodels</a></span><span class="op">(</span></span>
 <span>  <span class="va">final_trained_workflow</span>,</span>
@@ -731,21 +379,229 @@ is the most important in determining compactness:</p>
 <span><span class="co">#&gt;   -&gt; target variable   :  445  values </span></span>
 <span><span class="co">#&gt;   -&gt; predict function  :  yhat.workflow  will be used (  default  )</span></span>
 <span><span class="co">#&gt;   -&gt; predicted values  :  No value for predict function target column. (  default  )</span></span>
-<span><span class="co">#&gt;   -&gt; model_info        :  package tidymodels , ver. 1.4.0 , task regression (  default  ) </span></span>
+<span><span class="co">#&gt;   -&gt; model_info        :  package tidymodels , ver. 1.4.1 , task regression (  default  ) </span></span>
 <span><span class="co">#&gt;   -&gt; predicted values  :  numerical, min =  0.063353 , mean =  0.5173986 , max =  0.9554381  </span></span>
 <span><span class="co">#&gt;   -&gt; residual function :  difference between y and yhat (  default  )</span></span>
 <span><span class="co">#&gt;   -&gt; residuals         :  numerical, min =  -0.1965148 , mean =  -0.0001375619 , max =  0.3349416  </span></span>
 <span><span class="co">#&gt;   A new explainer has been created!</span></span>
 <span><span class="va">feature_importance</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://modeloriented.github.io/DALEX/reference/model_parts.html" class="external-link">model_parts</a></span><span class="op">(</span><span class="va">explainer</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">feature_importance</span>, max_vars <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></code></pre></div>
+<span></span>
+<span><span class="co"># Create summary dataframe</span></span>
+<span><span class="va">importance_summary_df</span> <span class="op">&lt;-</span> <span class="va">feature_importance</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">variable</span> <span class="op">!=</span> <span class="st">"_baseline_"</span> <span class="op">&amp;</span> <span class="va">variable</span> <span class="op">!=</span> <span class="st">"_full_model_"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">variable</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    mean_dropout <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">dropout_loss</span><span class="op">)</span>,</span>
+<span>    min_dropout <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">dropout_loss</span><span class="op">)</span>,</span>
+<span>    max_dropout <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">dropout_loss</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create plot</span></span>
+<span><span class="va">feature_importance_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
+<span>  <span class="va">importance_summary_df</span>,</span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">mean_dropout</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/reorder.factor.html" class="external-link">reorder</a></span><span class="op">(</span><span class="va">variable</span>, <span class="va">mean_dropout</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_errorbarh.html" class="external-link">geom_errorbarh</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="va">min_dropout</span>, xmax <span class="op">=</span> <span class="va">max_dropout</span><span class="op">)</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>    color <span class="op">=</span> <span class="st">"gray50"</span>,</span>
+<span>    linewidth <span class="op">=</span> <span class="fl">0.9</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span></span>
+<span>    color <span class="op">=</span> <span class="st">"darkred"</span>,</span>
+<span>    size <span class="op">=</span> <span class="fl">3</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Feature importance"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Increase in RMSE after feature shuffling"</span>,</span>
+<span>    y <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">feature_importance_plot</span><span class="op">)</span></span></code></pre></div>
 <p><img src="DESPLIM-compactness_files/figure-html/feature-importance-1.png" width="700"></p>
-<p>We find that Polsby-Popper and Convex Hull are the most important
-features. However, all geographical features plays a role in predicting
-the compactness score.</p>
-<p>To create a single XGBoost model object, we can extract the fit
-engine, to be saved and used for future predictions.</p>
+<p>The results clearly show that Polsby-Popper and Convex Hull are the
+two most influential features. This aligns with their common usage in
+(re-)districting analysis and their relation to what is typically
+perceived as compact. However, all features play a role in predicting
+the compactness score, justifying a more nuanced model setup.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="usage">4. Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
+</h2>
+<p>This model is now available in the package through the
+<code><a href="../reference/desplim_compactness.html">desplim_compactness()</a></code> function.</p>
+<p>The final test is to see how the model’s predictions compare to the
+original compactness scores on the example districts.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">final_xgb_model_engine</span> <span class="op">&lt;-</span> <span class="fu">extract_fit_engine</span><span class="op">(</span><span class="va">final_trained_workflow</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Apply desplim_compactness to the original example districts</span></span>
+<span><span class="va">score_high</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/desplim_compactness.html">desplim_compactness</a></span><span class="op">(</span><span class="va">highly_compact</span><span class="op">)</span><span class="op">$</span><span class="va">compactness</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Attaching package: 'redistmetrics'</span></span>
+<span><span class="co">#&gt; The following object is masked from 'package:dplyr':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     tally</span></span>
+<span><span class="va">score_moderate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/desplim_compactness.html">desplim_compactness</a></span><span class="op">(</span><span class="va">moderately_compact</span><span class="op">)</span><span class="op">$</span><span class="va">compactness</span></span>
+<span><span class="va">score_low</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/desplim_compactness.html">desplim_compactness</a></span><span class="op">(</span><span class="va">non_compact</span><span class="op">)</span><span class="op">$</span><span class="va">compactness</span></span>
+<span></span>
+<span><span class="co"># Create comparison plots</span></span>
+<span><span class="va">p1_final</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">highly_compact</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span></span>
+<span>    <span class="st">"High Compactness"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
+<span>      <span class="st">"Original: "</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">highly_compact</span><span class="op">$</span><span class="va">compact</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>      <span class="st">"\nModel: "</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">score_high</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p2_final</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">moderately_compact</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Medium Compactness"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
+<span>      <span class="st">"Original: "</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">moderately_compact</span><span class="op">$</span><span class="va">compact</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>      <span class="st">"\nModel: "</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">score_moderate</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p3_final</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">non_compact</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Low Compactness"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
+<span>      <span class="st">"Original: "</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">non_compact</span><span class="op">$</span><span class="va">compact</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>      <span class="st">"\nModel: "</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">score_low</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p1_final</span> <span class="op">+</span> <span class="va">p2_final</span> <span class="op">+</span> <span class="va">p3_final</span></span></code></pre></div>
+<p><img src="DESPLIM-compactness_files/figure-html/usage-1.png" width="700"></p>
+<p>As we can see, the scores from the <code><a href="../reference/desplim_compactness.html">desplim_compactness()</a></code>
+function are very close to the original compactness scores.</p>
+<p>Finally, we can investigate the example district with the largest
+deviance between the model prediction and actual compactness score. We
+set <code>keep_metrics = TRUE</code> in the
+<code>desplim_compactness</code> function. This returns not just the
+final score, but also the 10 underlying geometric features, which is
+useful for diagnosing specific cases.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># This may take a moment as it calculates compactness for all 558 shapes.</span></span>
+<span><span class="va">compare_scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/desplim_compactness.html">desplim_compactness</a></span><span class="op">(</span><span class="va">desplim_sf_data</span>, keep_metrics <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>deviance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">compact</span> <span class="op">-</span> <span class="va">compactness</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Find the district with the largest deviance</span></span>
+<span><span class="va">max_deviance</span> <span class="op">&lt;-</span> <span class="va">compare_scores</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice_max</a></span><span class="op">(</span>order_by <span class="op">=</span> <span class="va">deviance</span>, n <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot the result</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">max_deviance</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">geom_sf</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"firebrick"</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Largest deviance in example data"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
+<span>      <span class="st">"Original score: "</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">max_deviance</span><span class="op">$</span><span class="va">compact</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>      <span class="st">"\nModel score: "</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">max_deviance</span><span class="op">$</span><span class="va">compactness</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>      <span class="st">"\nDeviance: "</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">max_deviance</span><span class="op">$</span><span class="va">deviance</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="DESPLIM-compactness_files/figure-html/deviance-1.png" width="700"></p>
+<p>The main reason for the high deviance is the disagreement between the
+different geometrical feaures of the district:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">max_deviance</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"boyce"</span>, <span class="st">"hull"</span>, <span class="st">"polsby"</span>, <span class="st">"reock"</span>, <span class="st">"sym_x"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Simple feature collection with 1 feature and 5 fields</span></span>
+<span><span class="co">#&gt; Geometry type: POLYGON</span></span>
+<span><span class="co">#&gt; Dimension:     XY</span></span>
+<span><span class="co">#&gt; Bounding box:  xmin: -93.23186 ymin: 41.8622 xmax: -92.06474 ymax: 42.38496</span></span>
+<span><span class="co">#&gt; Geodetic CRS:  NAD83</span></span>
+<span><span class="co">#&gt;       boyce      hull    polsby    reock     sym_x</span></span>
+<span><span class="co">#&gt; 1 0.8865827 0.6883464 0.2839296 0.332486 0.7157668</span></span>
+<span><span class="co">#&gt;                         geometry</span></span>
+<span><span class="co">#&gt; 1 POLYGON ((-93.23184 41.8657...</span></span></code></pre></div>
+<p>The shape has a high convex hull score, but a very low polsby score
+(indicating a highly complex perimeter). This example doesn’t indicate
+model failure. It rather highlights that the model is sensitive to
+perimeter complexity, which is often down-weighted when intuitively
+evaluating a shape’s overall form.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.5.1 (2025-06-13)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.3 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt;  [1] redistmetrics_1.0.9 geos_0.2.4          patchwork_1.3.2    </span></span>
+<span><span class="co">#&gt;  [4] sf_1.0-21           doFuture_1.1.2      future_1.67.0      </span></span>
+<span><span class="co">#&gt;  [7] foreach_1.5.2       DALEXtra_2.3.0      DALEX_2.5.2        </span></span>
+<span><span class="co">#&gt; [10] xgboost_1.7.11.1    yardstick_1.3.2     workflowsets_1.1.1 </span></span>
+<span><span class="co">#&gt; [13] workflows_1.3.0     tune_2.0.0          tidyr_1.3.1        </span></span>
+<span><span class="co">#&gt; [16] tailor_0.1.0        rsample_1.3.1       recipes_1.3.1      </span></span>
+<span><span class="co">#&gt; [19] purrr_1.1.0         parsnip_1.3.3       modeldata_1.5.1    </span></span>
+<span><span class="co">#&gt; [22] infer_1.0.9         ggplot2_3.5.2       dplyr_1.1.4        </span></span>
+<span><span class="co">#&gt; [25] dials_1.4.2         scales_1.4.0        broom_1.0.9        </span></span>
+<span><span class="co">#&gt; [28] tidymodels_1.4.1    desplim_0.1.0      </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] DBI_1.2.3           rlang_1.1.6         magrittr_2.0.3     </span></span>
+<span><span class="co">#&gt;  [4] furrr_0.3.1         e1071_1.7-16        compiler_4.5.1     </span></span>
+<span><span class="co">#&gt;  [7] systemfonts_1.2.3   vctrs_0.6.5         lhs_1.2.0          </span></span>
+<span><span class="co">#&gt; [10] wk_0.9.4            pkgconfig_2.0.3     fastmap_1.2.0      </span></span>
+<span><span class="co">#&gt; [13] backports_1.5.0     labeling_0.4.3      utf8_1.2.6         </span></span>
+<span><span class="co">#&gt; [16] rmarkdown_2.29      prodlim_2025.04.28  ragg_1.5.0         </span></span>
+<span><span class="co">#&gt; [19] xfun_0.53           cachem_1.1.0        jsonlite_2.0.0     </span></span>
+<span><span class="co">#&gt; [22] parallel_4.5.1      R6_2.6.1            bslib_0.9.0        </span></span>
+<span><span class="co">#&gt; [25] RColorBrewer_1.1-3  parallelly_1.45.1   rpart_4.1.24       </span></span>
+<span><span class="co">#&gt; [28] lubridate_1.9.4     jquerylib_0.1.4     Rcpp_1.1.0         </span></span>
+<span><span class="co">#&gt; [31] iterators_1.0.14    knitr_1.50          future.apply_1.20.0</span></span>
+<span><span class="co">#&gt; [34] Matrix_1.7-3        splines_4.5.1       nnet_7.3-20        </span></span>
+<span><span class="co">#&gt; [37] timechange_0.3.0    tidyselect_1.2.1    rstudioapi_0.17.1  </span></span>
+<span><span class="co">#&gt; [40] yaml_2.3.10         timeDate_4041.110   codetools_0.2-20   </span></span>
+<span><span class="co">#&gt; [43] listenv_0.9.1       lattice_0.22-7      tibble_3.3.0       </span></span>
+<span><span class="co">#&gt; [46] withr_3.0.2         evaluate_1.0.5      desc_1.4.3         </span></span>
+<span><span class="co">#&gt; [49] survival_3.8-3      units_0.8-7         proxy_0.4-27       </span></span>
+<span><span class="co">#&gt; [52] libgeos_3.11.1-3    pillar_1.11.0       KernSmooth_2.23-26 </span></span>
+<span><span class="co">#&gt; [55] generics_0.1.4      globals_0.18.0      ingredients_2.3.0  </span></span>
+<span><span class="co">#&gt; [58] class_7.3-23        glue_1.8.0          tools_4.5.1        </span></span>
+<span><span class="co">#&gt; [61] data.table_1.17.8   gower_1.0.2         fs_1.6.6           </span></span>
+<span><span class="co">#&gt; [64] grid_4.5.1          ipred_0.9-15        sfd_0.1.0          </span></span>
+<span><span class="co">#&gt; [67] cli_3.6.5           DiceDesign_1.10     textshaping_1.0.3  </span></span>
+<span><span class="co">#&gt; [70] lava_1.8.1          gtable_0.3.6        GPfit_1.0-9        </span></span>
+<span><span class="co">#&gt; [73] sass_0.4.10         digest_0.6.37       classInt_0.4-11    </span></span>
+<span><span class="co">#&gt; [76] farver_2.1.2        htmltools_0.5.8.1   pkgdown_2.1.3      </span></span>
+<span><span class="co">#&gt; [79] lifecycle_1.0.4     hardhat_1.4.2       sparsevctrs_0.3.4  </span></span>
+<span><span class="co">#&gt; [82] MASS_7.3-65</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
