@@ -11,7 +11,7 @@ Aside from the main algorithm, the package contains several helper functions, wh
 
 ## Installation
 
-This package depends on the spatial package [`sf`](https://github.com/r-spatial/sf). It is recommended to install this package first.
+This package depends heavily on the spatial package [`sf`](https://github.com/r-spatial/sf). It is recommended to install this package first.
 
 Execute the following to install the latest version of `desplim`:
 
@@ -24,7 +24,7 @@ install_github("thesixmax/desplim")
 
 The following is the up to date list of functions available in the package. Please refer to the individual man pages and vignettes for more information. **Extended documentation, including examples, is work in progress.**
 
-| Fuction | Type | Description |
+| Function | Type | Description |
 |:------------------|:--------|:-------------------------------------------|
 | `desplim_split_merge()` | Main | Apply the DESPLIM algorithm to a set of input polygons and lines. |
 | `desplim_split()` | Main | Split a polygon based on a `sf` LINESTRING object and optional border connections. |

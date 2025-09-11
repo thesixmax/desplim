@@ -1,5 +1,5 @@
 #' Calculate the 'desplim' compactness of an `sf` POLYGON object
-#' @description Based on the approach described in Kaufmann et al. (2018), this
+#' @description Based on the approach described in Kaufmann et al. (2021), this
 #' function computes the compactness of an `sf` POLYGON object.
 #' @param input object of class `sf` of type POLYGON or MULTIPOLYGON.
 #' @param keep_metrics logical; should all the compactness metrics be kept?

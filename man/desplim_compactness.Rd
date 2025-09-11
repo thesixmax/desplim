@@ -17,7 +17,7 @@ An sf object of type POLYGON matching \code{input}, with the compactness
 metric(s) added.
 }
 \description{
-Based on the approach described in Kaufmann et al. (2018), this
+Based on the approach described in Kaufmann et al. (2021), this
 function computes the compactness of an \code{sf} POLYGON object.
 }
 \details{
