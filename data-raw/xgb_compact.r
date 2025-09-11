@@ -4,8 +4,6 @@
 # in inst/extdata/. This script should be run manually by the developer
 # whenever the model needs to be regenerated.
 
-# --- 1. SETUP ---
-
 # Load all required packages
 library(tidymodels)
 library(xgboost)
@@ -20,12 +18,10 @@ registerDoFuture()
 plan(multisession, workers = parallel::detectCores(logical = FALSE) - 1)
 options(tidymodels.dark = TRUE)
 
-# --- 2. MODEL TRAINING & TUNING (Your code is perfect here) ---
-
 # Split data
 set.seed(123)
 data_split <- initial_split(
-  desplim_compactness_data,
+  compact_train,
   prop = 0.8,
   strata = compact
 )
@@ -88,8 +84,6 @@ tune_results <- tune_bayes(
   )
 )
 
-# --- 3. FINALIZATION & EXPORT ---
-
 # Select parameters
 best_params <- select_best(tune_results, metric = "rmse")
 print(best_params)
@@ -106,13 +100,13 @@ print(test_metrics)
 final_trained_workflow <- extract_workflow(final_fit)
 
 # Extract XGBoost model object
-final_xgb_model_engine <- extract_fit_engine(final_trained_workflow)
+xgb_model_engine <- extract_fit_engine(final_trained_workflow)
 
 # Ensure the destination directory exists
 usethis::use_directory("inst/extdata")
 
 # Save the final model
 xgb.save(
-  final_xgb_model_engine,
+  xgb_model_engine,
   here("inst", "extdata", "xgb_model.bin")
 )

@@ -59,14 +59,14 @@ districts_merged <- merge(
   all.x = TRUE
 )
 districts_merged <- st_cast(districts_merged, "POLYGON", warn = FALSE)
-districts_merged$compact <- 1 - (districts_merged$compactness / 100)
-desplim_sf_data <- districts_merged[
-  sample(1:nrow(districts_merged), 25),
-  c("compact", "geometry")
+districts_merged <- districts_merged[
+  !duplicated(sf::st_geometry(districts_merged)),
 ]
+districts_merged$compact <- 1 - (districts_merged$compactness / 100)
+kaufman_25 <- districts_merged[51:75, c("compact", "geometry")]
 
 ### Calculate metrics
-districts_merged$id <- seq(1:nrow(districts_merged))
+districts_merged$id <- seq_len(nrow(districts_merged))
 districts_merged$boyce <- comp_bc(
   plans = districts_merged$id,
   shp = districts_merged
@@ -110,7 +110,7 @@ districts_merged$sym_y <- comp_y_sym(
 
 ### Create model data and rescale compactness
 districts_nogeom <- st_drop_geometry(districts_merged)
-desplim_compact_data <- districts_nogeom[, c(
+compact_train <- districts_nogeom[, c(
   "compact",
   "boyce",
   "box_reock",
@@ -125,5 +125,5 @@ desplim_compact_data <- districts_nogeom[, c(
 )]
 
 ### Write data
-usethis::use_data(desplim_sf_data, overwrite = TRUE)
-usethis::use_data(desplim_compact_data, overwrite = TRUE)
+usethis::use_data(kaufman_25, overwrite = TRUE)
+usethis::use_data(compact_train, overwrite = TRUE)
