@@ -1,4 +1,4 @@
-# Filename: data-raw/xgb_compact.R
+# Filename: data-raw/compactness_model.R
 #
 # This script trains the final XGBoost model and saves it as a binary file
 # in inst/extdata/. This script should be run manually by the developer
@@ -9,6 +9,9 @@ library(tidymodels)
 library(xgboost)
 library(doFuture)
 library(here)
+library(DALEX)
+library(DALEXtra)
+options(tidymodels.dark = TRUE)
 
 # Load the package's internal data and functions
 devtools::load_all()
@@ -86,6 +89,7 @@ tune_results <- tune_bayes(
 
 # Select parameters
 best_params <- select_best(tune_results, metric = "rmse")
+save(best_params, file = "vignettes/best_params.rda")
 print(best_params)
 
 # Finalise the workflow and fit
@@ -94,10 +98,27 @@ final_fit <- last_fit(final_xgb_wf, data_split)
 
 # Model metrics
 test_metrics <- collect_metrics(final_fit)
+save(test_metrics, file = "vignettes/test_metrics.rda")
 print(test_metrics)
+
+# Model predictions
+test_predictions <- collect_predictions(final_fit)
+save(test_predictions, file = "vignettes/test_predictions.rda")
 
 # Final workflow
 final_trained_workflow <- extract_workflow(final_fit)
+
+# Create explainer
+train_predictors <- train_data |> select(-compact)
+train_outcome <- train_data$compact
+explainer <- explain_tidymodels(
+  final_trained_workflow,
+  data = train_predictors,
+  y = train_outcome,
+  label = "XGBoost"
+)
+feature_importance <- model_parts(explainer)
+save(feature_importance, file = "vignettes/feature_importance.rda")
 
 # Extract XGBoost model object
 xgb_model_engine <- extract_fit_engine(final_trained_workflow)

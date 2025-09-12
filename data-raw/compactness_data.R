@@ -1,14 +1,19 @@
-### Required packages
+# Filename: data-raw/compactness_data.R
+#
+# This script creates the data used to model the DESPLIM compactness metric and
+# vignettes-specific data. It should be run manually by the developer whenever
+# the data needs to be regenerated.
+
+# Load all required packages
 require(sf)
 require(redistmetrics)
 require(dataverse)
 require(archive)
 
-### Path
+# Path
 path <- "./data-raw/"
 
-### Get data
-# Shapefiles
+# Get shapefiles
 if (!file.exists(paste0(path, "both.shp"))) {
   file <- get_file(
     file = 4143644,
@@ -18,7 +23,7 @@ if (!file.exists(paste0(path, "both.shp"))) {
   archive_extract(paste0(path, "both.7z"), dir = path)
 }
 
-# Training data and training labels
+# Get training data and training labels
 if (!file.exists(paste0(path, "training_data.RData"))) {
   download.file(
     "https://raw.githubusercontent.com/aaronrkaufman/compactness/master/data/training_data.RData",
@@ -34,13 +39,13 @@ if (!file.exists(paste0(path, "training_labels.RData"))) {
   )
 }
 
-### Load data
+# Load data
 load(paste0(path, "training_data.RData"))
 load(paste0(path, "training_labels.RData"))
 districts_shape <- read_sf(paste0(path, "both.shp"))
 districts_data <- (do.call(rbind, mylist))[do.call(rbind, mylist)$parts == 1, ]
 
-### Filter districts
+# Filter districts
 districts_filtered <- districts_shape[
   districts_shape$NAME %in% districts_data$district,
 ]
@@ -62,10 +67,12 @@ districts_merged <- st_cast(districts_merged, "POLYGON", warn = FALSE)
 districts_merged <- districts_merged[
   !duplicated(sf::st_geometry(districts_merged)),
 ]
+
+# Rescale compactness and generate example district geometries
 districts_merged$compact <- 1 - (districts_merged$compactness / 100)
 kaufman_25 <- districts_merged[51:75, c("compact", "geometry")]
 
-### Calculate metrics
+# Calculate metrics
 districts_merged$id <- seq_len(nrow(districts_merged))
 districts_merged$boyce <- comp_bc(
   plans = districts_merged$id,
@@ -108,7 +115,7 @@ districts_merged$sym_y <- comp_y_sym(
   shp = districts_merged
 )
 
-### Create model data and rescale compactness
+# Create model data
 districts_nogeom <- st_drop_geometry(districts_merged)
 compact_train <- districts_nogeom[, c(
   "compact",
@@ -124,6 +131,6 @@ compact_train <- districts_nogeom[, c(
   "sym_y"
 )]
 
-### Write data
-usethis::use_data(kaufman_25, overwrite = TRUE)
+# Write data
 usethis::use_data(compact_train, overwrite = TRUE)
+save(kaufman_25, file = "vignettes/kaufman_25.rda")

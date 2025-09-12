@@ -9,17 +9,17 @@
 
 A data frame with 547 rows and 11 columns:
 \describe{
-\item{compact}{District compactness}
+\item{compact}{Kaufman compactness}
 \item{boyce}{Boyce Clark ratio}
 \item{box_reock}{Box Reock compactness}
 \item{hull}{Convex Hull compactness}
-\item{len_wid}{Length Width compactness}
+\item{len_wid}{Length-Width compactness}
 \item{polsby}{Polsby Popper compactness}
 \item{reock}{Reock compactness}
 \item{schwartz}{Schwartzberg compactness}
 \item{skew}{Skew compactness}
-\item{sym_x}{X symmetry compactness}
-\item{sym_y}{Y symmetry compactness}
+\item{sym_x}{X symmetry}
+\item{sym_y}{Y symmetry}
 }
 }
 }
@@ -35,7 +35,7 @@ compact_train
 }
 \description{
 Clean data used to model the DESPLIM compactness metric, based on
-the data provided by Kaufmann et al. (2021). The metrics have been computed
+the data provided by Kaufman et al. (2021). The metrics have been computed
 using the \code{redistmetrics} package.
 }
 \keyword{datasets}
