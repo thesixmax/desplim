@@ -25,7 +25,8 @@ Suggests:
     doFuture,
     dplyr,
     ggplot2,
-    patchwork
+    patchwork,
+    devtools
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
 URL: https://thesixmax.github.io/desplim/

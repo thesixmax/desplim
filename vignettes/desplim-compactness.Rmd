@@ -35,14 +35,16 @@ library(xgboost) # model engine
 library(DALEX) # model explainability
 library(DALEXtra) # helper for DALEX
 library(doFuture) # parallel processing
+```
 
+```{r parallel, eval = FALSE}
 # Set up parallel processing
 registerDoFuture()
 n_cores <- max(1, parallel::detectCores(logical = FALSE) - 1)
 plan(multisession, workers = n_cores)
 ```
 
-The `compact_train` data contains the human-assigned compactness score (`compact`), ranging from 0 (least compact) to 1 (most compact) and 10 geometric features for 558 unique district shapes.
+The `compact_train` data contains the human-assigned compactness score (`compact`), ranging from 0 (least compact) to 1 (most compact) and 10 geometric features for 547 unique district shapes.
 
 ```{r explore-head}
 head(compact_train)
@@ -54,7 +56,12 @@ hist(compact_train$compact)
 
 The histogram shows a relatively uniform distribution of compactness scores, which is ideal for training a model that can recognise the full spectrum from non-compact to highly compact shapes. As the output suggests, no single geometric feature appears to be a perfect predictor on its own.
 
-The following plots show three sample districts from the dataset: one of the least compact, one with a medium score, and one of the most compact. 25 sample districs are provided in the `kaufman_25` dataset.
+The following plots show three sample districts from the dataset: one of the least compact, one with a medium score, and one of the most compact.
+
+```{r load-kaufman_25, include=FALSE}
+# Load the kaufman_25 data
+load("kaufman_25.rda")
+```
 
 ```{r explore-districts}
 library(ggplot2)
@@ -97,7 +104,7 @@ As the plots demonstrate, the scores align well with our visual intuition. The d
 
 We'll split the data into a training set (80%) and a testing set (20%). We stratify by the compact variable to ensure both sets have a similar distribution of scores.
 
-```{r data-preparation}
+```{r data-preparation, eval = FALSE}
 set.seed(123)
 # Data split
 data_split <- initial_split(compact_train, prop = 0.8, strata = compact)
@@ -118,7 +125,7 @@ First, we define our model specification using tidymodels. We mark standard hype
 
 We then bundle our (simple) pre-processing recipe and the model specification into a single workflow object. Finally, we create a 10-fold cross-validation.
 
-```{r xgb-specification}
+```{r xgb-specification, eval = FALSE}
 # XGBoost specification
 xgb_spec <- boost_tree(
   trees = tune(),
@@ -163,7 +170,7 @@ Instead of testing every possible combination of parameters (through a grid sear
 
 The baseline is 100 iterations, but it will stop early if it doesn't find a better model after 20 rounds. We'll use Root Mean Squared Error (RMSE) as the primary metric to optimise.
 
-```{r bayesian-tuning, cache = TRUE, message = FALSE}
+```{r bayesian-tuning, eval = FALSE}
 set.seed(789)
 tune_results <- tune_bayes(
   xgb_workflow,
@@ -190,11 +197,21 @@ Once the tuning process is complete, we select the parameters that resulted in t
 
 -   Evaluates the performance of this final model on the held-out test set.
 
-```{r best-params}
+```{r best_params, eval = FALSE}
 # Select the best parameters
 best_params <- select_best(tune_results, metric = "rmse")
-print(best_params)
+```
 
+```{r load-best_params, include=FALSE}
+# Load the best_params data
+load("best_params.rda")
+```
+
+```{r print_best-params}
+print(best_params)
+```
+
+```{r final-workflow, eval = FALSE}
 # Finalise the workflow
 final_xgb_wf <- finalize_workflow(xgb_workflow, best_params)
 final_fit <- last_fit(final_xgb_wf, data_split)
@@ -208,8 +225,17 @@ Having a final, trained model, we need to evaluate its performance on the held-o
 
 First, we'll examine the summary performance metrics. The `collect_metrics()` function gives us the Root Mean Squared Error (RMSE) and the R-squared from the test set.
 
-```{r metrics}
+```{r test_metrics, eval = FALSE}
+# Compute test metrics
 test_metrics <- collect_metrics(final_fit)
+```
+
+```{r load-test_metrics, include=FALSE}
+# Load the test_metrics data
+load("test_metrics.rda")
+```
+
+```{r print-test_metrics}
 print(test_metrics)
 ```
 
@@ -219,10 +245,17 @@ The low RMSE and high R-squared indicate that the model's predictions are, on av
 
 Metrics give us a high-level summary, but a plot of predicted versus actual values helps us better understand the model predictions across compactness scores.
 
-```{r predictions}
+```{r test_predictions, eval = FALSE}
 # Collect the individual predictions on the test set
 test_predictions <- collect_predictions(final_fit)
+```
 
+```{r load-test_predictions, include=FALSE}
+# Load the test_predictions data
+load("test_predictions.rda")
+```
+
+```{r plot-test_predictions}
 # Create the plot
 predicted_vs_actual_plot <- ggplot(
   test_predictions,
@@ -246,7 +279,7 @@ The plot confirms the presumed good performance. Aside from a few outliers, ther
 
 Finally, we want to understand what geometric features the model relies on most to make its predictions. We can calculate feature importance by measuring how much the model's prediction error increases when a single feature's values are randomly shuffled.
 
-```{r feature-importance}
+```{r trained-workflow, eval = FALSE}
 # Extract the finalised and trained workflow
 final_trained_workflow <- extract_workflow(final_fit)
 
@@ -260,7 +293,14 @@ explainer <- explain_tidymodels(
   label = "XGBoost"
 )
 feature_importance <- model_parts(explainer)
+```
 
+```{r load-feature_importance, include=FALSE}
+# Load the feature_importance data
+load("feature_importance.rda")
+```
+
+```{r feature-importance}
 # Create summary dataframe
 importance_summary_df <- feature_importance %>%
   as_tibble() %>%
@@ -305,7 +345,7 @@ This model is now available in the package through the `desplim_compactness()` f
 
 The final test is to see how the model's predictions compare to the original compactness scores on the example districts.
 
-```{r usage}
+```{r usage, message = FALSE}
 # Apply desplim_compactness to the original example districts
 score_high <- desplim_compactness(highly_compact)$compactness
 score_moderate <- desplim_compactness(moderately_compact)$compactness
@@ -393,5 +433,6 @@ print(max_deviance)
 The shape has a very low polsby score (indicating a highly complex perimeter), while other features are not as low. This example doesn't indicate model failure. It rather highlights that the model is sensitive to perimeter complexity.
 
 ```{r session-info, collapse = TRUE}
-devtools::session_info()
+library(devtools)
+devtools::session_info(pkgs = c("attached"))
 ```
