@@ -1,5 +1,5 @@
 url: https://thesixmax.github.io/desplim/
 template:
   bootstrap: 5
-  bootswatch: flatly
+  bootswatch: yeti
 
