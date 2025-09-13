@@ -1,5 +1,45 @@
 url: https://thesixmax.github.io/desplim/
 template:
   bootstrap: 5
-  bootswatch: yeti
+  bootswatch: litera
+
+navbar:
+  bg: dark
+  structure:
+    left: [home, articles, reference]
+    right: [github]
+  components:
+      home:
+        text: "Overview"
+        href: index.html
+      articles:
+        text: "Articles"
+        menu:
+          - text: "The DESPLIM compactness score"
+            href: articles/desplim-compactness.html
+      reference:
+        text: "Rereference"
+        href: reference/index.html
+
+reference:
+  - title: Main algorithm
+    desc: Functions to run the full algorithm or separate split and merge steps.
+    contents:
+      - desplim_split_merge
+      - desplim_split
+      - desplim_merge
+  - title: Helper functions
+    desc: Standalone functions to perform necessary geospatial operations
+    contents:
+      - desplim_all_nodes
+      - desplim_angles
+      - desplim_cast_substring
+      - desplim_compactness
+      - desplim_connect_border
+      - desplim_leaf_nodes
+      - desplim_line_nearest_node
+  - title: Data
+    desc: Example data used for testing and documentation
+    contents:
+      - compact_train
 
