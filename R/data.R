@@ -4,8 +4,7 @@
 #' the data provided by Kaufman et al. (2021). The metrics have been computed
 #' using the `redistmetrics` package.
 #'
-#' @format ## `compact_train`
-#' A data frame with 547 rows and 11 columns:
+#' @format A data frame with 547 rows and 11 columns:
 #' \describe{
 #'   \item{compact}{Kaufman compactness}
 #'   \item{boyce}{Boyce Clark ratio}

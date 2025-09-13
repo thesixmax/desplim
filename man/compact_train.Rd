@@ -5,8 +5,6 @@
 \alias{compact_train}
 \title{Data used to model the DESPLIM compactness metric}
 \format{
-\subsection{\code{compact_train}}{
-
 A data frame with 547 rows and 11 columns:
 \describe{
 \item{compact}{Kaufman compactness}
@@ -20,7 +18,6 @@ A data frame with 547 rows and 11 columns:
 \item{skew}{Skew compactness}
 \item{sym_x}{X symmetry}
 \item{sym_y}{Y symmetry}
-}
 }
 }
 \source{
