@@ -432,7 +432,10 @@ print(max_deviance)
 
 The shape has a very low polsby score (indicating a highly complex perimeter), while other features are not as low. This example doesn't indicate model failure. It rather highlights that the model is sensitive to perimeter complexity.
 
-```{r session-info, collapse = TRUE}
+```{r load-devtools, include = FALSE}
 library(devtools)
+```
+
+```{r session-info, collapse = TRUE}
 devtools::session_info(pkgs = c("attached"))
 ```

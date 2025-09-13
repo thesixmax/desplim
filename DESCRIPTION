@@ -1,9 +1,9 @@
 Package: desplim
-Title: DESPLIM algorithm in R
+Title: DESPLIM algorithm
 Version: 0.1.0
 Authors@R: 
     person("Sixten Maximillian", "Thestrup", ,"sixten.thestrup@gmail.com", role = c("aut", "cre"))
-Description: Implementation of the DESPLIM algorithm in R.
+Description: Implementation of the DESPLIM algorithm in R, providing core functions alongside general purpose helper functions for geospatial operations.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -29,7 +29,7 @@ Suggests:
     devtools
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
-URL: https://thesixmax.github.io/desplim/
+URL: https://thesixmax.github.io/desplim/, https://github.com/thesixmax/desplim
 Depends: 
     R (>= 3.5)
 LazyData: true
