@@ -5,20 +5,20 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>DESPLIM algorithm in R • desplim</title>
+<title>DESPLIM algorithm • desplim</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="DESPLIM algorithm in R">
-<meta name="description" content="Implementation of the DESPLIM algorithm in R.">
-<meta property="og:description" content="Implementation of the DESPLIM algorithm in R.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="DESPLIM algorithm">
+<meta name="description" content="Implementation of the DESPLIM algorithm in R, providing core functions alongside general purpose helper functions for geospatial operations.">
+<meta property="og:description" content="Implementation of the DESPLIM algorithm in R, providing core functions alongside general purpose helper functions for geospatial operations.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top bg-dark" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="index.html">desplim</a>
 
@@ -31,18 +31,17 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="active nav-item"><a class="nav-link" href="index.html">Overview</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/DESPLIM-compactness.html">Understanding the DESPLIM compactness score</a></li>
+<li><a class="dropdown-item" href="articles/desplim-compactness.html">The DESPLIM compactness score</a></li>
   </ul>
 </li>
+<li class="nav-item"><a class="nav-link" href="reference/index.html">Rereference</a></li>
       </ul>
 <ul class="navbar-nav">
-<li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
-</form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/thesixmax/desplim/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -51,11 +50,11 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="desplim-implementation-of-the-desplim-algorithm-in-r">desplim: Implementation of the DESPLIM algorithm in R<a class="anchor" aria-label="anchor" href="#desplim-implementation-of-the-desplim-algorithm-in-r"></a>
+<div class="page-header"><h1 id="desplim-implementation-of-the-desplim-algorithm">desplim: Implementation of the DESPLIM algorithm<a class="anchor" aria-label="anchor" href="#desplim-implementation-of-the-desplim-algorithm"></a>
 </h1></div>
 <!-- badges: start -->
 
-<p>This package is the implementation of the DESPLIM (deterministic split-merge) algorithm for geospatial districting in R. <strong>An associated paper is forthcoming.</strong></p>
+<p>This package is the R implementation of the DESPLIM (deterministic split-merge) algorithm for geospatial districting.</p>
 <p>Aside from the main algorithm, the package contains several helper functions, which can be utilised when working with <code>sf</code> LINESTRING and POLYGON data.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -64,79 +63,26 @@
 <p>Execute the following to install the latest version of <code>desplim</code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
-<span><span class="fu">install_github</span><span class="op">(</span><span class="st">"thesixmax/desplim"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"thesixmax/desplim"</span><span class="op">)</span></span></code></pre></div>
+<p>In addition, the core functions can utilise parallel processing through the <a href="https://future.futureverse.org/" class="external-link"><code>future</code></a> framework, which is highly recommended.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"future"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="list-of-functions">List of functions<a class="anchor" aria-label="anchor" href="#list-of-functions"></a>
+<h2 id="the-desplim-algorithm">The DESPLIM algorithm<a class="anchor" aria-label="anchor" href="#the-desplim-algorithm"></a>
 </h2>
-<p>The following is the up to date list of functions available in the package. Please refer to the individual man pages and vignettes for more information. <strong>Extended documentation, including examples, is work in progress.</strong></p>
-<table class="table">
-<colgroup>
-<col width="26%">
-<col width="12%">
-<col width="61%">
-</colgroup>
-<thead><tr class="header">
-<th align="left">Function</th>
-<th align="left">Type</th>
-<th align="left">Description</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left"><code><a href="reference/desplim_split_merge.html">desplim_split_merge()</a></code></td>
-<td align="left">Main</td>
-<td align="left">Apply the DESPLIM algorithm to a set of input polygons and lines.</td>
-</tr>
-<tr class="even">
-<td align="left"><code><a href="reference/desplim_split.html">desplim_split()</a></code></td>
-<td align="left">Main</td>
-<td align="left">Split a polygon based on a <code>sf</code> LINESTRING object and optional border connections.</td>
-</tr>
-<tr class="odd">
-<td align="left"><code><a href="reference/desplim_merge.html">desplim_merge()</a></code></td>
-<td align="left">Main</td>
-<td align="left">Deterministically merge a set of polygons with possible parameters defined by the user.</td>
-</tr>
-<tr class="even">
-<td align="left"><code><a href="reference/desplim_all_nodes.html">desplim_all_nodes()</a></code></td>
-<td align="left">Helper</td>
-<td align="left">Compute all nodes of an <code>sf</code> LINESTRING object</td>
-</tr>
-<tr class="odd">
-<td align="left"><code><a href="reference/desplim_angles.html">desplim_angles()</a></code></td>
-<td align="left">Helper</td>
-<td align="left">Calculate the minimum and maximum angles between two <code>sf</code> LINESTRING objects.</td>
-</tr>
-<tr class="even">
-<td align="left"><code><a href="reference/desplim_cast_substring.html">desplim_cast_substring()</a></code></td>
-<td align="left">Helper</td>
-<td align="left">Cast an <code>sf</code> LINESTRING or MULTILINESTRING object to substrings.</td>
-</tr>
-<tr class="odd">
-<td align="left"><code><a href="reference/desplim_compactness.html">desplim_compactness()</a></code></td>
-<td align="left">Helper</td>
-<td align="left">Calculate the ‘desplim’ compactness of an <code>sf</code> POLYGON object.</td>
-</tr>
-<tr class="even">
-<td align="left"><code><a href="reference/desplim_connect_border.html">desplim_connect_border()</a></code></td>
-<td align="left">Helper</td>
-<td align="left">Connect a <code>sf</code> LINESTRING object to border nodes of an <code>sf</code> POLYGON object.</td>
-</tr>
-<tr class="odd">
-<td align="left"><code><a href="reference/desplim_leaf_nodes.html">desplim_leaf_nodes()</a></code></td>
-<td align="left">Helper</td>
-<td align="left">Identify leaf nodes of an <code>sf</code> LINESTRING object.</td>
-</tr>
-<tr class="even">
-<td align="left"><code><a href="reference/desplim_line_nearest_node.html">desplim_line_nearest_node()</a></code></td>
-<td align="left">Helper</td>
-<td align="left">Calculate the minimum distance linestring from an <code>sf</code> POINT object to nodes of a <code>sf</code> LINESTRING object.</td>
-</tr>
-</tbody>
-</table>
+<p><strong>An associated paper is forthcoming.</strong></p>
+<p><strong>Extended documentation, including examples, is work in progress.</strong></p>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+  </main><aside class="col-md-3"><div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/thesixmax/desplim/" class="external-link">Browse source code</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="LICENSE.html">Full license</a></li>
