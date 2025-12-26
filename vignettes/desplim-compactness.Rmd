@@ -318,9 +318,9 @@ feature_importance_plot <- ggplot(
   importance_summary_df,
   aes(x = mean_dropout, y = reorder(variable, mean_dropout))
 ) +
-  geom_errorbarh(
+  geom_errorbar(
     aes(xmin = min_dropout, xmax = max_dropout),
-    height = 0.2,
+    width = 0.2,
     color = "gray50",
     linewidth = 0.9
   ) +
