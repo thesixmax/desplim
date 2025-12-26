@@ -1,13 +1,13 @@
 Package: desplim
 Title: DESPLIM algorithm
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person("Sixten Maximillian", "Thestrup", ,"sixten.thestrup@gmail.com", role = c("aut", "cre"))
 Description: Implementation of the DESPLIM algorithm in R, providing core functions alongside general purpose helper functions for geospatial operations.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
     sf,
     xgboost,

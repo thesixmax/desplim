@@ -129,5 +129,5 @@ usethis::use_directory("inst/extdata")
 # Save the final model
 xgb.save(
   xgb_model_engine,
-  here("inst", "extdata", "xgb_model.bin")
+  here("inst", "extdata", "xgb_model.json")
 )

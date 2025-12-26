@@ -28,7 +28,7 @@ desplim_compactness <- function(input, keep_metrics = FALSE) {
     stop("Input polygons have to be of class sf")
   }
   input_geom_type <- unique(sf::st_geometry_type(input))
-  if (!all(input_geom_type %in% c("MULTILIPOLYGON", "POLYGON"))) {
+  if (!all(input_geom_type %in% c("MULTIPOLYGON", "POLYGON"))) {
     stop("Input should be MULTIPOLYGON or POLYGON")
   }
   if ("MULTILMULTIPOLYGON" %in% input_geom_type) {
@@ -37,7 +37,7 @@ desplim_compactness <- function(input, keep_metrics = FALSE) {
   districts <- input
   xgb_model <- xgboost::xgb.load(system.file(
     "extdata",
-    "xgb_model.bin",
+    "xgb_model.json",
     package = "desplim"
   ))
   districts$id <- seq_len(nrow(districts))
