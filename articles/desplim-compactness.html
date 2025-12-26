@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">desplim</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -119,7 +119,7 @@ shapes.</p>
 <span><span class="co">#&gt; 6 0.3819629 0.1683645 0.6358400 0.4629123</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">compact_train</span><span class="op">$</span><span class="va">compact</span><span class="op">)</span></span></code></pre></div>
-<p><img src="desplim-compactness_files/figure-html/explore-hist-1.png" width="700"></p>
+<p><img src="desplim-compactness_files/figure-html/explore-hist-1.png" class="r-plt" alt="" width="700"></p>
 <p>The histogram shows a relatively uniform distribution of compactness
 scores, which is ideal for training a model that can recognise the full
 spectrum from non-compact to highly compact shapes. As the output
@@ -164,7 +164,7 @@ compact.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p1</span> <span class="op">+</span> <span class="va">p2</span> <span class="op">+</span> <span class="va">p3</span></span></code></pre></div>
-<p><img src="desplim-compactness_files/figure-html/explore-districts-1.png" width="700"></p>
+<p><img src="desplim-compactness_files/figure-html/explore-districts-1.png" class="r-plt" alt="" width="700"></p>
 <p>As the plots demonstrate, the scores align well with our visual
 intuition. The district with the low score is the most “irregular”,
 while the district with the high score is much more “regular”.</p>
@@ -289,7 +289,7 @@ test set.</p></li>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 8</span></span></span>
 <span><span class="co">#&gt;   trees tree_depth learn_rate  mtry min_n loss_reduction sample_size .config</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>   973          2    0.009<span style="text-decoration: underline;">38</span>     4     3  0.000<span style="text-decoration: underline;">000</span>001<span style="text-decoration: underline;">43</span>       0.202 iter033</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>   811         14    0.007<span style="text-decoration: underline;">34</span>     9    31       1.67<span style="color: #949494;">e</span><span style="color: #BB0000;">-10</span>       0.646 iter008</span></span></code></pre></div>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Finalise the workflow</span></span>
 <span><span class="va">final_xgb_wf</span> <span class="op">&lt;-</span> <span class="fu">finalize_workflow</span><span class="op">(</span><span class="va">xgb_workflow</span>, <span class="va">best_params</span><span class="op">)</span></span>
@@ -316,8 +316,8 @@ Error (RMSE) and the R-squared from the test set.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 4</span></span></span>
 <span><span class="co">#&gt;   .metric .estimator .estimate .config        </span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> rmse    standard      0.099<span style="text-decoration: underline;">7</span> pre0_mod0_post0</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> rsq     standard      0.885  pre0_mod0_post0</span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> rmse    standard       0.101 pre0_mod0_post0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> rsq     standard       0.881 pre0_mod0_post0</span></span></code></pre></div>
 <p>The low RMSE and high R-squared indicate that the model’s predictions
 are, on average, very close to our target compactness scores.</p>
 </div>
@@ -346,7 +346,7 @@ compactness scores.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">predicted_vs_actual_plot</span><span class="op">)</span></span></code></pre></div>
-<p><img src="desplim-compactness_files/figure-html/plot-test_predictions-1.png" width="700"></p>
+<p><img src="desplim-compactness_files/figure-html/plot-test_predictions-1.png" class="r-plt" alt="" width="700"></p>
 <p>The plot confirms the presumed good performance. Aside from a few
 outliers, there are no major areas where the model systematically over-
 or under-predicts, suggesting it generalises well across the entire
@@ -406,7 +406,7 @@ when a single feature’s values are randomly shuffled.</p>
 <span>    x <span class="op">=</span> <span class="st">"Increase in RMSE after feature shuffling"</span>,</span>
 <span>    y <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: `geom_errobarh()` was deprecated in ggplot2 4.0.0.</span></span>
+<span><span class="co">#&gt; Warning: `geom_errorbarh()` was deprecated in ggplot2 4.0.0.</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">ℹ</span> Please use the `orientation` argument of `geom_errorbar()` instead.</span></span>
 <span><span class="co">#&gt; <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
 <span><span class="co">#&gt; <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
@@ -414,7 +414,7 @@ when a single feature’s values are randomly shuffled.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">feature_importance_plot</span><span class="op">)</span></span>
 <span><span class="co">#&gt; `height` was translated to `width`.</span></span></code></pre></div>
-<p><img src="desplim-compactness_files/figure-html/feature-importance-1.png" width="700"></p>
+<p><img src="desplim-compactness_files/figure-html/feature-importance-1.png" class="r-plt" alt="" width="700"></p>
 <p>The results clearly show that Polsby-Popper and Convex Hull are the
 two most influential features. This aligns with their common usage in
 (re-)districting analysis and their relation to what is typically
@@ -476,7 +476,7 @@ original compactness scores on the example districts.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p1_final</span> <span class="op">+</span> <span class="va">p2_final</span> <span class="op">+</span> <span class="va">p3_final</span></span></code></pre></div>
-<p><img src="desplim-compactness_files/figure-html/usage-1.png" width="700"></p>
+<p><img src="desplim-compactness_files/figure-html/usage-1.png" class="r-plt" alt="" width="700"></p>
 <p>As we can see, the scores from the <code><a href="../reference/desplim_compactness.html">desplim_compactness()</a></code>
 function are very close to the original compactness scores.</p>
 <p>Finally, we can investigate the example district with the largest
@@ -509,7 +509,7 @@ useful for diagnosing specific cases.</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="desplim-compactness_files/figure-html/deviance-1.png" width="700"></p>
+<p><img src="desplim-compactness_files/figure-html/deviance-1.png" class="r-plt" alt="" width="700"></p>
 <p>The main reason for the high deviance is the disagreement between the
 different geometrical feaures of the district:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
@@ -522,7 +522,7 @@ different geometrical feaures of the district:</p>
 <span><span class="co">#&gt;     compact     boyce box_reock      hull   len_wid    polsby     reock</span></span>
 <span><span class="co">#&gt; 1 0.4509804 0.7310901 0.3964636 0.5551677 0.4437754 0.1500558 0.2241015</span></span>
 <span><span class="co">#&gt;    schwartz      skew     sym_x     sym_y compactness  deviance</span></span>
-<span><span class="co">#&gt; 1 0.3873703 0.2151164 0.4948946 0.4713435   0.1758566 0.2751238</span></span>
+<span><span class="co">#&gt; 1 0.3873703 0.2151164 0.4948946 0.4713435   0.1375506 0.3134298</span></span>
 <span><span class="co">#&gt;                         geometry</span></span>
 <span><span class="co">#&gt; 1 POLYGON ((-88.02823 42.2698...</span></span></code></pre></div>
 <p>The shape has a very low polsby score (indicating a highly complex
@@ -533,7 +533,7 @@ to perimeter complexity.</p>
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://sessioninfo.r-lib.org/reference/session_info.html" class="external-link">session_info</a></span><span class="op">(</span>pkgs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"attached"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB; font-weight: bold;">─ Session info ───────────────────────────────────────────────────────────────</span></span></span>
 <span><span class="co">#&gt;  <span style="color: #555555; font-style: italic;">setting </span> <span style="color: #555555; font-style: italic;">value</span></span></span>
-<span><span class="co">#&gt;  version  R version 4.5.1 (2025-06-13)</span></span>
+<span><span class="co">#&gt;  version  R version 4.5.2 (2025-10-31)</span></span>
 <span><span class="co">#&gt;  os       Ubuntu 24.04.3 LTS</span></span>
 <span><span class="co">#&gt;  system   x86_64, linux-gnu</span></span>
 <span><span class="co">#&gt;  ui       X11</span></span>
@@ -541,47 +541,47 @@ to perimeter complexity.</p>
 <span><span class="co">#&gt;  collate  C.UTF-8</span></span>
 <span><span class="co">#&gt;  ctype    C.UTF-8</span></span>
 <span><span class="co">#&gt;  tz       UTC</span></span>
-<span><span class="co">#&gt;  date     2025-09-13</span></span>
+<span><span class="co">#&gt;  date     2025-12-26</span></span>
 <span><span class="co">#&gt;  pandoc   3.1.11 @ /opt/hostedtoolcache/pandoc/3.1.11/x64/ (via rmarkdown)</span></span>
 <span><span class="co">#&gt;  quarto   NA</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB; font-weight: bold;">─ Packages ───────────────────────────────────────────────────────────────────</span></span></span>
-<span><span class="co">#&gt;  <span style="color: #555555; font-style: italic;">package      </span> <span style="color: #555555; font-style: italic;">*</span> <span style="color: #555555; font-style: italic;">version </span> <span style="color: #555555; font-style: italic;">date (UTC)</span> <span style="color: #555555; font-style: italic;">lib</span> <span style="color: #555555; font-style: italic;">source</span></span></span>
-<span><span class="co">#&gt;  broom         * 1.0.9    <span style="color: #555555;">2025-07-28</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  DALEX         * 2.5.2    <span style="color: #555555;">2025-07-27</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  DALEXtra      * 2.3.0    <span style="color: #555555;">2023-05-26</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  desplim       * 0.1.0    <span style="color: #555555;">2025-09-13</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">local</span></span></span>
-<span><span class="co">#&gt;  devtools      * 2.4.5    <span style="color: #555555;">2022-10-11</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  dials         * 1.4.2    <span style="color: #555555;">2025-09-04</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  doFuture      * 1.1.2    <span style="color: #555555;">2025-07-14</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  dplyr         * 1.1.4    <span style="color: #555555;">2023-11-17</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  foreach       * 1.5.2    <span style="color: #555555;">2022-02-02</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  future        * 1.67.0   <span style="color: #555555;">2025-07-29</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  geos          * 0.2.4    <span style="color: #555555;">2023-11-30</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  ggplot2       * 4.0.0    <span style="color: #555555;">2025-09-11</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  infer         * 1.0.9    <span style="color: #555555;">2025-06-26</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  modeldata     * 1.5.1    <span style="color: #555555;">2025-08-22</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  parsnip       * 1.3.3    <span style="color: #555555;">2025-08-31</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  patchwork     * 1.3.2    <span style="color: #555555;">2025-08-25</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  purrr         * 1.1.0    <span style="color: #555555;">2025-07-10</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  recipes       * 1.3.1    <span style="color: #555555;">2025-05-21</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  redistmetrics * 1.0.9    <span style="color: #555555;">2025-04-29</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  rsample       * 1.3.1    <span style="color: #555555;">2025-07-29</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  scales        * 1.4.0    <span style="color: #555555;">2025-04-24</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  sf            * 1.0-21   <span style="color: #555555;">2025-05-15</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  tailor        * 0.1.0    <span style="color: #555555;">2025-08-25</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  tidymodels    * 1.4.1    <span style="color: #555555;">2025-09-08</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  tidyr         * 1.3.1    <span style="color: #555555;">2024-01-24</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  tune          * 2.0.0    <span style="color: #555555;">2025-09-01</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  usethis       * 3.2.1    <span style="color: #555555;">2025-09-06</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  workflows     * 1.3.0    <span style="color: #555555;">2025-08-27</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  workflowsets  * 1.1.1    <span style="color: #555555;">2025-05-27</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  xgboost       * 1.7.11.1 <span style="color: #555555;">2025-05-15</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
-<span><span class="co">#&gt;  yardstick     * 1.3.2    <span style="color: #555555;">2025-01-22</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  <span style="color: #555555; font-style: italic;">package      </span> <span style="color: #555555; font-style: italic;">*</span> <span style="color: #555555; font-style: italic;">version</span> <span style="color: #555555; font-style: italic;">date (UTC)</span> <span style="color: #555555; font-style: italic;">lib</span> <span style="color: #555555; font-style: italic;">source</span></span></span>
+<span><span class="co">#&gt;  broom         * 1.0.11  <span style="color: #555555;">2025-12-04</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  DALEX         * 2.5.3   <span style="color: #555555;">2025-10-16</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  DALEXtra      * 2.3.0   <span style="color: #555555;">2023-05-26</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  desplim       * 0.1.1   <span style="color: #555555;">2025-12-26</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">local</span></span></span>
+<span><span class="co">#&gt;  devtools      * 2.4.6   <span style="color: #555555;">2025-10-03</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  dials         * 1.4.2   <span style="color: #555555;">2025-09-04</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  doFuture      * 1.1.3   <span style="color: #555555;">2025-12-09</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  dplyr         * 1.1.4   <span style="color: #555555;">2023-11-17</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  foreach       * 1.5.2   <span style="color: #555555;">2022-02-02</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  future        * 1.68.0  <span style="color: #555555;">2025-11-17</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  geos          * 0.2.5   <span style="color: #555555;">2025-12-19</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  ggplot2       * 4.0.1   <span style="color: #555555;">2025-11-14</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  infer         * 1.1.0   <span style="color: #555555;">2025-12-18</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  modeldata     * 1.5.1   <span style="color: #555555;">2025-08-22</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  parsnip       * 1.4.0   <span style="color: #555555;">2025-12-01</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  patchwork     * 1.3.2   <span style="color: #555555;">2025-08-25</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  purrr         * 1.2.0   <span style="color: #555555;">2025-11-04</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  recipes       * 1.3.1   <span style="color: #555555;">2025-05-21</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  redistmetrics * 1.0.11  <span style="color: #555555;">2025-12-15</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  rsample       * 1.3.1   <span style="color: #555555;">2025-07-29</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  scales        * 1.4.0   <span style="color: #555555;">2025-04-24</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  sf            * 1.0-23  <span style="color: #555555;">2025-11-28</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  tailor        * 0.1.0   <span style="color: #555555;">2025-08-25</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  tidymodels    * 1.4.1   <span style="color: #555555;">2025-09-08</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  tidyr         * 1.3.2   <span style="color: #555555;">2025-12-19</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  tune          * 2.0.1   <span style="color: #555555;">2025-10-17</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  usethis       * 3.2.1   <span style="color: #555555;">2025-09-06</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  workflows     * 1.3.0   <span style="color: #555555;">2025-08-27</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  workflowsets  * 1.1.1   <span style="color: #555555;">2025-05-27</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  xgboost       * 3.1.2.1 <span style="color: #555555;">2025-12-03</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
+<span><span class="co">#&gt;  yardstick     * 1.3.2   <span style="color: #555555;">2025-01-22</span> <span style="color: #555555;">[1]</span> <span style="color: #BB00BB; font-weight: bold;">RSPM</span></span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #555555;"> [1] /home/runner/work/_temp/Library</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;"> [2] /opt/R/4.5.1/lib/R/site-library</span></span></span>
-<span><span class="co">#&gt; <span style="color: #555555;"> [3] /opt/R/4.5.1/lib/R/library</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;"> [2] /opt/R/4.5.2/lib/R/site-library</span></span></span>
+<span><span class="co">#&gt; <span style="color: #555555;"> [3] /opt/R/4.5.2/lib/R/library</span></span></span>
 <span><span class="co">#&gt;  <span style="color: #BBBBBB; background-color: #BB0000;">*</span> ── Packages attached to the search path.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB; font-weight: bold;">──────────────────────────────────────────────────────────────────────────────</span></span></span></code></pre></div>
@@ -597,7 +597,7 @@ to perimeter complexity.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

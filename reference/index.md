@@ -1,0 +1,63 @@
+# Package index
+
+## Main algorithm
+
+Functions to run the full algorithm or separate split and merge steps.
+
+- [`desplim_split_merge()`](https://thesixmax.github.io/desplim/reference/desplim_split_merge.md)
+  : Apply the DESPLIM algorithm to a set of input polygons and lines.
+- [`desplim_split()`](https://thesixmax.github.io/desplim/reference/desplim_split.md)
+  : Split a polygon based on a sf LINESTRING object and optional border
+  connections.
+- [`desplim_merge()`](https://thesixmax.github.io/desplim/reference/desplim_merge.md)
+  : Deterministically merge a set of polygons with possible parameters
+  defined by the user.
+
+## Helper functions
+
+Standalone functions to perform necessary geospatial operations
+
+- [`desplim_all_nodes()`](https://thesixmax.github.io/desplim/reference/desplim_all_nodes.md)
+  :
+
+  Compute all nodes of an `sf` LINESTRING object
+
+- [`desplim_angles()`](https://thesixmax.github.io/desplim/reference/desplim_angles.md)
+  :
+
+  Calculate the minimum and maximum angles between two `sf` LINESTRING
+  objects
+
+- [`desplim_cast_substring()`](https://thesixmax.github.io/desplim/reference/desplim_cast_substring.md)
+  :
+
+  Cast an `sf` LINESTRING or MULTILINESTRING object to substrings
+
+- [`desplim_compactness()`](https://thesixmax.github.io/desplim/reference/desplim_compactness.md)
+  :
+
+  Calculate the 'desplim' compactness of an `sf` POLYGON object
+
+- [`desplim_connect_border()`](https://thesixmax.github.io/desplim/reference/desplim_connect_border.md)
+  :
+
+  Connect a `sf` LINESTRING object to border nodes of an `sf` POLYGON
+  object
+
+- [`desplim_leaf_nodes()`](https://thesixmax.github.io/desplim/reference/desplim_leaf_nodes.md)
+  :
+
+  Identify leaf nodes of an `sf` LINESTRING object
+
+- [`desplim_line_nearest_node()`](https://thesixmax.github.io/desplim/reference/desplim_line_nearest_node.md)
+  :
+
+  Calculate the minimum distance linestring from an `sf` POINT object to
+  nodes of a `sf` LINESTRING object
+
+## Data
+
+Example data used for testing and documentation
+
+- [`compact_train`](https://thesixmax.github.io/desplim/reference/compact_train.md)
+  : Data used to model the DESPLIM compactness metric
