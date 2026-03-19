@@ -29,12 +29,10 @@ desplim_cast_substring <- function(input_lines) {
   output_crs <- sf::st_crs(input_lines)
   if (is.na(output_crs)) {
     warning("Input lines have no CRS")
-    output_crs <- sf::st_crs(NA)
   }
-  empty_sf <- sf::st_sf(geometry = sf::st_sfc(crs = output_crs))
   if (nrow(input_lines) == 0) {
     warning("Input lines is empty")
-    return(empty_sf)
+    return(sf::st_sf(geometry = sf::st_sfc(crs = output_crs)))
   }
   input_geom_type <- unique(sf::st_geometry_type(input_lines))
   if (!all(input_geom_type %in% c("LINESTRING", "MULTILINESTRING"))) {
@@ -47,78 +45,45 @@ desplim_cast_substring <- function(input_lines) {
     input_lines <- sf::st_cast(input_lines, "LINESTRING", warn = FALSE)
   }
   input_attributes <- sf::st_drop_geometry(input_lines)
-  all_substring_list <- list()
-  parent_line_indices <- integer(0)
-  if (nrow(input_lines) < 1000) {
-    for (i in seq_len(nrow(input_lines))) {
+  n_lines <- nrow(input_lines)
+  segment_lists <- vector("list", n_lines)
+  parent_lists <- vector("list", n_lines)
+  if (n_lines < 1000) {
+    for (i in seq_len(n_lines)) {
       coords <- sf::st_coordinates(input_lines[i, ])
-      if (is.null(coords) || nrow(coords) < 2) {
-        next
-      }
-      current_line_segments <- lapply(
-        1:(nrow(coords) - 1),
-        function(k) {
-          sf::st_linestring(coords[k:(k + 1), 1:2, drop = FALSE])
-        }
-      )
-      all_substring_list <- c(all_substring_list, current_line_segments)
-      parent_line_indices <- c(
-        parent_line_indices,
-        rep(i, length(current_line_segments))
-      )
+      if (nrow(coords) < 2) next
+      n_segs <- nrow(coords) - 1L
+      segment_lists[[i]] <- lapply(seq_len(n_segs), function(k) {
+        sf::st_linestring(coords[k:(k + 1), 1:2])
+      })
+      parent_lists[[i]] <- rep(i, n_segs)
     }
   } else {
     all_coords <- sf::st_coordinates(input_lines)
-    if (is.null(all_coords) || nrow(all_coords) == 0) {
+    if (nrow(all_coords) == 0) {
       out_sf <- input_lines[0, , drop = FALSE]
-      sf::st_geometry(out_sf) <- sf::st_sfc(crs = sf::st_crs(input_lines))
+      sf::st_geometry(out_sf) <- sf::st_sfc(crs = output_crs)
       return(out_sf)
     }
     line_id_coords <- all_coords[, "L1"]
-    is_new_line <- c(
-      TRUE,
-      line_id_coords[-1] != line_id_coords[-length(line_id_coords)]
-    )
+    is_new_line <- c(TRUE, line_id_coords[-1] != line_id_coords[-length(line_id_coords)])
     line_starts <- which(is_new_line)
-    line_ends <- c(
-      line_starts[-1] - 1,
-      nrow(all_coords)
-    )
-    original_line_indices <- line_id_coords[
-      line_starts
-    ]
+    line_ends <- c(line_starts[-1] - 1L, nrow(all_coords))
+    original_line_indices <- line_id_coords[line_starts]
+    segment_lists <- vector("list", length(line_starts))
+    parent_lists <- vector("list", length(line_starts))
     for (j in seq_along(line_starts)) {
-      start_row <- line_starts[j]
-      end_row <- line_ends[j]
-      original_line_idx <- original_line_indices[j]
-      coords_one_line <- all_coords[
-        start_row:end_row,
-        c("X", "Y"),
-        drop = FALSE
-      ]
-      if (is.null(coords_one_line) || nrow(coords_one_line) < 2) {
-        next
-      }
-      segments_current_line <- lapply(
-        1:(nrow(coords_one_line) - 1),
-        function(k) {
-          sf::st_linestring(coords_one_line[
-            k:(k + 1),
-            ,
-            drop = FALSE
-          ])
-        }
-      )
-      all_substring_list <- c(
-        all_substring_list,
-        segments_current_line
-      )
-      parent_line_indices <- c(
-        parent_line_indices,
-        rep(original_line_idx, length(segments_current_line))
-      )
+      coords_one_line <- all_coords[line_starts[j]:line_ends[j], c("X", "Y")]
+      if (nrow(coords_one_line) < 2) next
+      n_segs <- nrow(coords_one_line) - 1L
+      segment_lists[[j]] <- lapply(seq_len(n_segs), function(k) {
+        sf::st_linestring(coords_one_line[k:(k + 1), ])
+      })
+      parent_lists[[j]] <- rep(original_line_indices[j], n_segs)
     }
   }
+  all_substring_list <- do.call(c, segment_lists)
+  parent_line_indices <- unlist(parent_lists)
   if (length(all_substring_list) == 0) {
     out_sf <- input_lines[0, , drop = FALSE]
     sf::st_geometry(out_sf) <- sf::st_sfc(crs = output_crs)
@@ -126,6 +91,5 @@ desplim_cast_substring <- function(input_lines) {
   }
   lines_sfc <- sf::st_sfc(all_substring_list, crs = output_crs)
   attributes_expanded <- input_attributes[parent_line_indices, , drop = FALSE]
-  lines_sf_out <- sf::st_set_geometry(attributes_expanded, lines_sfc)
-  return(lines_sf_out)
+  sf::st_set_geometry(attributes_expanded, lines_sfc)
 }

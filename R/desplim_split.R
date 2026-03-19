@@ -89,7 +89,6 @@ desplim_split <- function(
   }
   if (is.na(output_crs)) {
     warning("Input have no CRS")
-    output_crs <- sf::st_crs(NA)
   }
   empty_sf <- sf::st_sf(geometry = sf::st_sfc(crs = output_crs))
   if (nrow(input_polygon) == 0) {
@@ -202,8 +201,7 @@ desplim_split <- function(
       )
       road_polygon_intersect_sf <- NULL
       if (
-        !is.null(road_polygon_intersect_geom) &&
-          length(road_polygon_intersect_geom) > 0 &&
+        length(road_polygon_intersect_geom) > 0 &&
           !all(sf::st_is_empty(road_polygon_intersect_geom)) &&
           any(sf::st_geometry_type(road_polygon_intersect_geom) == "POINT")
       ) {
@@ -260,9 +258,6 @@ desplim_split <- function(
       ignore_equal = TRUE
     )
   }
-  if (is.null(all_leaf_nearest_nodes) || nrow(all_leaf_nearest_nodes) == 0) {
-    all_leaf_nearest_nodes <- sf::st_sf(geometry = sf::st_sfc(crs = output_crs))
-  }
   sfc_lines_combined <- if (nrow(lines_combined_sf) > 0) {
     sf::st_geometry(lines_combined_sf)
   } else {
@@ -273,19 +268,19 @@ desplim_split <- function(
   } else {
     sf::st_sfc(crs = output_crs)
   }
-  sfc_lines_substring <- if (nrow(lines_substring) > 0) {
-    sf::st_geometry(lines_substring)
-  } else {
-    sf::st_sfc(crs = output_crs)
-  }
   updated_network <- .desplim_rename_geom(sf::st_sf(
     geometry = c(sfc_lines_combined, sfc_leaf_nearest)
   ))
-  updated_lines <- .desplim_rename_geom(sf::st_sf(
-    geometry = c(sfc_lines_substring, sfc_leaf_nearest)
-  ))
   border_connect_lines <- sf::st_sf(geometry = sf::st_sfc(crs = output_crs))
   if (enable_border_connect) {
+    sfc_lines_substring <- if (nrow(lines_substring) > 0) {
+      sf::st_geometry(lines_substring)
+    } else {
+      sf::st_sfc(crs = output_crs)
+    }
+    updated_lines <- .desplim_rename_geom(sf::st_sf(
+      geometry = c(sfc_lines_substring, sfc_leaf_nearest)
+    ))
     if (nrow(updated_lines) > 0 && nrow(input_polygon) > 0) {
       temp_border_connect <- desplim_connect_border(
         input_linestring = updated_lines,
@@ -298,25 +293,16 @@ desplim_split <- function(
       }
     }
   }
-  final_updated_network_sfc_list <- list()
-  if (nrow(updated_network) > 0 && !all(sf::st_is_empty(updated_network))) {
-    final_updated_network_sfc_list[[
-      length(final_updated_network_sfc_list) + 1
-    ]] <- sf::st_geometry(updated_network)
-  }
-  if (
-    nrow(border_connect_lines) > 0 &&
-      !all(sf::st_is_empty(border_connect_lines))
-  ) {
-    final_updated_network_sfc_list[[
-      length(final_updated_network_sfc_list) + 1
-    ]] <- sf::st_geometry(border_connect_lines)
-  }
-  final_splitting_lines_sfc <- NULL
-  if (length(final_updated_network_sfc_list) > 0) {
-    final_splitting_lines_sfc <- do.call(c, final_updated_network_sfc_list)
+  network_parts <- Filter(Negate(is.null), list(
+    if (nrow(updated_network) > 0 && !all(sf::st_is_empty(updated_network)))
+      sf::st_geometry(updated_network),
+    if (nrow(border_connect_lines) > 0 && !all(sf::st_is_empty(border_connect_lines)))
+      sf::st_geometry(border_connect_lines)
+  ))
+  final_splitting_lines_sfc <- if (length(network_parts) > 0) {
+    do.call(c, network_parts)
   } else {
-    final_splitting_lines_sfc <- sf::st_sfc(crs = output_crs)
+    sf::st_sfc(crs = output_crs)
   }
   final_splitting_lines_sf <- .desplim_rename_geom(sf::st_sf(
     geometry = final_splitting_lines_sfc
@@ -337,5 +323,5 @@ desplim_split <- function(
   } else if (is.na(sf::st_crs(polygonize)) && !is.na(output_crs)) {
     sf::st_crs(polygonize) <- output_crs
   }
-  return(polygonize)
+  polygonize
 }

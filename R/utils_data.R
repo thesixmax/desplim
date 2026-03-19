@@ -8,7 +8,7 @@
   current <- attr(input, "sf_column")
   names(input)[names(input) == current] <- geom_name
   sf::st_geometry(input) <- geom_name
-  return(input)
+  input
 }
 .desplim_rm_duplicate_geoms <- function(input) {
   if (!inherits(input, "sf")) {
@@ -26,9 +26,9 @@
     }
   })))
   if (length(indices_to_remove) > 0) {
-    output <- input[-indices_to_remove, , drop = FALSE]
+    output <- input[-indices_to_remove, ]
   } else {
     output <- input
   }
-  return(output)
+  output
 }

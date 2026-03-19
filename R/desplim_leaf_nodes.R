@@ -30,7 +30,6 @@ desplim_leaf_nodes <- function(input_lines) {
   output_crs <- sf::st_crs(input_lines)
   if (is.na(output_crs)) {
     warning("Input lines have no CRS")
-    output_crs <- sf::st_crs(NA)
   }
   empty_sfc_points <- sf::st_sfc(sf::st_point(), crs = output_crs)[0]
   empty_leaf_nodes <- sf::st_sf(geometry = empty_sfc_points)
@@ -42,33 +41,26 @@ desplim_leaf_nodes <- function(input_lines) {
     input_lines <- .desplim_rename_geom(input_lines)
   }
   if (!all(input_geom_types %in% c("LINESTRING", "MULTILINESTRING"))) {
-    is_valid_type <- sapply(
-      input_geom_types,
-      function(type) type %in% c("LINESTRING", "MULTILINESTRING")
-    )
-    if (!all(is_valid_type)) {
-      if (
-        length(input_geom_types) == 1 &&
-          input_geom_types == "GEOMETRYCOLLECTION" &&
-          all(sf::st_is_empty(input_lines))
-      ) {
-        return(empty_leaf_nodes)
-      }
-      stop("Input should be LINESTRING or MULTILINESTRING")
+    if (
+      length(input_geom_types) == 1 &&
+        input_geom_types == "GEOMETRYCOLLECTION" &&
+        all(sf::st_is_empty(input_lines))
+    ) {
+      return(empty_leaf_nodes)
     }
+    stop("Input should be LINESTRING or MULTILINESTRING")
   }
   if (any(input_geom_types == "MULTILINESTRING")) {
     input_lines <- sf::st_cast(input_lines, "LINESTRING", warn = FALSE)
   }
   lines_substring <- desplim_cast_substring(input_lines)
-  all_cords <- sf::st_coordinates(lines_substring)[, c("X", "Y"), drop = FALSE]
+  all_cords <- sf::st_coordinates(lines_substring)[, c("X", "Y")]
   unique_endpoint_flags <- !(duplicated(all_cords) |
     duplicated(all_cords, fromLast = TRUE))
   leaf_coords_matrix <- all_cords[unique_endpoint_flags, , drop = FALSE]
-  leaf_nodes <- sf::st_as_sf(
+  sf::st_as_sf(
     as.data.frame(leaf_coords_matrix),
     coords = c("X", "Y"),
     crs = output_crs
   )
-  return(leaf_nodes)
 }

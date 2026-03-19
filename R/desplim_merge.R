@@ -43,7 +43,7 @@
 #'   square = TRUE
 #' ))
 #' plot(sf::st_geometry(grid_poly), border = 'grey')
-#' 
+#'
 #' # Create buildings
 #' n_buildings <- 100
 #' set.seed(420)
@@ -64,7 +64,7 @@
 #' })
 #' buildings_sf <- do.call(rbind, list_of_buildings)
 #' plot(sf::st_geometry(buildings_sf), col = 'slateblue3', border = NA, add = TRUE)
-#' 
+#'
 #' # Merge with default settings
 #' grid_merged <- desplim_merge(
 #'   input_polygon = grid_poly,
@@ -92,7 +92,6 @@ desplim_merge <- function(
   }
   if (is.na(output_crs)) {
     warning("Neither of the input has a CRS")
-    output_crs <- sf::st_crs(NA)
   }
   empty_sf <- sf::st_sf(geometry = sf::st_sfc(crs = output_crs))
   if (nrow(input_polygons) == 0) {
@@ -108,8 +107,7 @@ desplim_merge <- function(
         sf::st_crs(input_buildings) != output_crs
     ) {
       warning(
-        "Input buildings has been transformed to a the CRS of the input 
-      polygons"
+        "Input buildings has been transformed to the CRS of the input polygons"
       )
       input_buildings <- sf::st_transform(input_buildings, output_crs)
     }
@@ -130,49 +128,48 @@ desplim_merge <- function(
   }
   if (!compact_method %in% c("desplim", "polsby", "schwartz", "convex_hull")) {
     stop(
-      "compact_method must be one of 'desplim', 'polsby', 'schwartz' or 
-      'convex_hull'"
+      "compact_method must be one of 'desplim', 'polsby', 'schwartz' or 'convex_hull'"
     )
   }
-  # Calculate initial relationships and values
-  poly_count <- seq_len(nrow(input_polygons))
-  relate <- sf::st_relate(input_polygons, pattern = "F***1****")
+  N <- nrow(input_polygons)
+  id_seq <- seq_len(N)
+  id_chr_init <- as.character(id_seq)
+  next_id <- N + 1L
+  # Adjacency list keyed by stable character ID
+  relate_raw <- sf::st_relate(input_polygons, pattern = "F***1****")
+  relate <- stats::setNames(relate_raw, id_chr_init)
   relate_vec <- lengths(relate)
-  border_mat <- matrix(nrow = length(poly_count), ncol = length(poly_count))
-  for (i in seq_along(poly_count)) {
-    border_mat[i, relate[[i]]] <- ifelse(
-      is.na(border_mat[i, relate[[i]]]),
-      suppressWarnings(as.numeric(sf::st_length(sf::st_intersection(
-        input_polygons[i, ],
-        input_polygons[relate[[i]], ]
-      )))),
-      border_mat[i, relate[[i]]]
-    )
-    border_mat[relate[[i]], i] <- border_mat[i, relate[[i]]]
-  }
-  border_mat[is.na(border_mat)] <- 0
-  perimeter_vec <- as.numeric(sf::st_perimeter(input_polygons))
-  enclosed_vec <- rep(0, times = length(poly_count))
-  for (i in seq_along(poly_count)) {
-    if (lengths(relate)[i] == 1) {
-      if (
-        border_mat[i, relate[[i]][1]] > (enclosed_threshold * perimeter_vec[i])
-      ) {
-        enclosed_vec[i] <- 1
-      }
+  borders <- stats::setNames(vector("list", N), id_chr_init)
+  for (i in id_seq) {
+    i_chr <- id_chr_init[i]
+    neighbors <- relate[[i_chr]]
+    if (length(neighbors) == 0) next
+    neighbors_chr <- as.character(neighbors)
+    new_neigh_mask <- !neighbors_chr %in% names(borders[[i_chr]])
+    new_neigh <- neighbors[new_neigh_mask]
+    new_neigh_chr <- neighbors_chr[new_neigh_mask]
+    if (length(new_neigh) == 0) next
+    computed <- suppressWarnings(as.numeric(sf::st_length(sf::st_intersection(
+      input_polygons[i, ],
+      input_polygons[new_neigh, ]
+    ))))
+    names(computed) <- new_neigh_chr
+    borders[[i_chr]] <- c(borders[[i_chr]], computed)
+    for (j in seq_along(new_neigh)) {
+      j_chr <- new_neigh_chr[j]
+      borders[[j_chr]] <- c(borders[[j_chr]], stats::setNames(computed[j], i_chr))
     }
   }
-  area_vec <- as.numeric(sf::st_area(input_polygons))
-  input_polygons$temp_poly_id <- seq_len(nrow(input_polygons))
+  # Named scalar vectors
+  perimeter_vec <- stats::setNames(as.numeric(sf::st_perimeter(input_polygons)), id_chr_init)
+  area_vec <- stats::setNames(as.numeric(sf::st_area(input_polygons)), id_chr_init)
+  # Building counts
+  input_polygons$temp_poly_id <- id_seq
   input_buildings$temp_bldg_id <- seq_len(nrow(input_buildings))
-  building_vec <- rep(0, times = nrow(input_polygons))
+  building_vec_raw <- rep(0L, N)
   if (nrow(input_buildings) > 0) {
-    overlaps_sf <- suppressWarnings(sf::st_intersection(
-      input_buildings,
-      input_polygons
-    ))
+    overlaps_sf <- suppressWarnings(sf::st_intersection(input_buildings, input_polygons))
     if (nrow(overlaps_sf) > 0) {
-      # Step 2: Calculate the area of each overlap
       overlaps_sf$overlap_area <- as.numeric(sf::st_area(overlaps_sf))
       overlaps_df <- sf::st_drop_geometry(overlaps_sf)
       overlaps_df_ordered <- overlaps_df[
@@ -183,224 +180,202 @@ desplim_merge <- function(
       ]
       if (nrow(building_assignments) > 0) {
         polygon_counts_table <- table(building_assignments$temp_poly_id)
-        polygon_indices_with_buildings <- as.numeric(names(
-          polygon_counts_table
-        ))
-        building_vec[polygon_indices_with_buildings] <- as.vector(
-          polygon_counts_table
-        )
+        polygon_indices_with_buildings <- as.integer(names(polygon_counts_table))
+        building_vec_raw[polygon_indices_with_buildings] <- as.vector(polygon_counts_table)
       }
     }
   }
-  union_list <- as.list(poly_count)
-  # Initial compactness
+  building_vec <- stats::setNames(as.numeric(building_vec_raw), id_chr_init)
+  # Enclosed flags
+  enclosed_vec <- stats::setNames(rep(FALSE, N), id_chr_init)
+  for (i_chr in id_chr_init) {
+    if (relate_vec[i_chr] == 1L) {
+      neigh_chr <- as.character(relate[[i_chr]][1])
+      blen <- borders[[i_chr]][neigh_chr]
+      if (!is.na(blen) && blen > enclosed_threshold * perimeter_vec[i_chr]) {
+        enclosed_vec[i_chr] <- TRUE
+      }
+    }
+  }
+  # Union list and compactness, keyed by stable character ID
+  union_list <- stats::setNames(as.list(id_seq), id_chr_init)
   compactness_active <- FALSE
-  compactness_vec <- rep(NA_real_, length(poly_count))
-  compactness_merge <- rep(0, length(poly_count))
-  compactness_iter <- 0
+  compactness_iter <- 0L
+  compactness_vec <- stats::setNames(rep(NA_real_, N), id_chr_init)
+  compactness_merge <- stats::setNames(rep(FALSE, N), id_chr_init)
+  # Local helpers (closures capture relate_vec from enclosing environment)
+  compute_compactness <- function(poly_sf) {
+    switch(compact_method,
+      "desplim" = desplim_compactness(poly_sf)$compactness,
+      "polsby" = redistmetrics::comp_polsby(plans = 1, shp = poly_sf),
+      "schwartz" = redistmetrics::comp_schwartz(plans = 1, shp = poly_sf),
+      "convex_hull" = redistmetrics::comp_ch(plans = 1, shp = poly_sf),
+      1
+    )
+  }
+  filter_compactness <- function(cm, cv) {
+    n_allow <- floor(compact_allow * (length(cm) + sum(relate_vec == 0)))
+    if (sum(cm, na.rm = TRUE) > n_allow && n_allow > 0) {
+      scores_filter <- cv[cm & !is.na(cm)]
+      if (length(scores_filter) > n_allow) {
+        cutoff_score <- sort(scores_filter, decreasing = TRUE)[n_allow]
+        cm[cm & !is.na(cv) & cv >= cutoff_score] <- FALSE
+      }
+    } else {
+      cm[] <- FALSE
+    }
+    cm
+  }
+  check_enclosed <- function(id_c) {
+    if (relate_vec[id_c] == 1L) {
+      sole_chr <- as.character(relate[[id_c]][1])
+      blen <- borders[[id_c]][sole_chr]
+      !is.na(blen) && blen > enclosed_threshold * perimeter_vec[id_c]
+    } else {
+      FALSE
+    }
+  }
   # This loop uses a two-phase approach. Phase 1 merges polygons based on
   # area, building count, and enclosure. Only when no more of these merges
   # are possible is phase 2 activated to calculate and use compactness.
   while (TRUE) {
-    area_merge <- ifelse(area_vec < area_threshold, 1, 0)
-    building_merge <- ifelse(building_vec < building_threshold, 1, 0)
+    active_ids_chr <- names(relate)
+    area_merge <- area_vec[active_ids_chr] < area_threshold
+    building_merge <- building_vec[active_ids_chr] < building_threshold
     # Initial merging conditions
-    merge_conditions <- (enclosed_vec == 1 |
-      area_merge == 1 |
-      building_merge == 1)
+    merge_conditions <- enclosed_vec[active_ids_chr] | area_merge | building_merge
     # Initial compactness activator
-    if (!compactness_active && !any(lengths(relate) > 0 & merge_conditions)) {
+    if (!compactness_active && !any(relate_vec > 0 & merge_conditions)) {
       compactness_active <- TRUE
-      compactness_iter <- 1
+      compactness_iter <- 1L
       if (length(union_list) > 0) {
-        compactness_vec <- unlist(lapply(union_list, function(x) {
-          current_poly_sf <- sf::st_sf(sf::st_union(input_polygons[x, ]))
-          switch(
-            compact_method,
-            "desplim" = desplim_compactness(current_poly_sf)$compactness,
-            "polsby" = redistmetrics::comp_polsby(
-              plans = 1,
-              shp = current_poly_sf
-            ),
-            "schwartz" = redistmetrics::comp_schwartz(
-              plans = 1,
-              shp = current_poly_sf
-            ),
-            "convex_hull" = redistmetrics::comp_ch(
-              plans = 1,
-              shp = current_poly_sf
-            ),
-            1
-          )
-        }))
-        compactness_merge <- ifelse(compactness_vec < compact_threshold, 1, 0)
-        n_allow <- floor(
-          compact_allow * (length(compactness_merge) + sum(relate_vec == 0))
-        )
-        if (sum(compactness_merge) > n_allow && n_allow > 0) {
-          scores_filter <- compactness_vec[which(compactness_merge == 1)]
-          if (length(scores_filter) > n_allow) {
-            cutoff_score <- sort(scores_filter, decreasing = TRUE)[n_allow]
-            compactness_merge[which(
-              compactness_merge == 1 & compactness_vec >= cutoff_score
-            )] <- 0
+        compactness_vec[active_ids_chr] <- unlist(lapply(
+          active_ids_chr,
+          function(id_c) {
+            compute_compactness(
+              sf::st_sf(sf::st_union(input_polygons[union_list[[id_c]], ]))
+            )
           }
-        } else {
-          compactness_merge <- rep(0, length(compactness_merge))
-        }
+        ))
+        compactness_merge[active_ids_chr] <- compactness_vec[active_ids_chr] < compact_threshold
+        compactness_merge <- filter_compactness(compactness_merge, compactness_vec)
       }
     }
     # Updated merging conditions in phase 2
     if (compactness_active) {
-      merge_conditions <- (compactness_merge == 1) |
-        (enclosed_vec == 1) |
-        area_merge == 1 |
-        building_merge == 1
+      merge_conditions <- compactness_merge[active_ids_chr] |
+        enclosed_vec[active_ids_chr] |
+        area_merge |
+        building_merge
     }
-    merge_vec <- (lengths(relate) > 0) & merge_conditions
-    merge_count <- sum(merge_vec)
-    if (merge_count == 0 || length(union_list) <= 1) {
-      break
-    }
+    merge_vec <- (relate_vec > 0) & merge_conditions
+    if (sum(merge_vec, na.rm = TRUE) == 0 || length(union_list) <= 1) break
     # Deterministically select polygon to merge
-    select_idx <- which(merge_vec == 1)
+    select_ids_chr <- names(which(merge_vec))
     order_df <- data.frame(
-      idx = select_idx,
-      rel_val = relate_vec[select_idx],
-      enc_val = enclosed_vec[select_idx],
-      area_val = area_vec[select_idx]
+      id = select_ids_chr,
+      rel_val = relate_vec[select_ids_chr],
+      enc_val = as.integer(enclosed_vec[select_ids_chr]),
+      area_val = area_vec[select_ids_chr],
+      stringsAsFactors = FALSE
     )
     ordered_candidates <- order_df[
       order(order_df$rel_val, -order_df$enc_val, order_df$area_val),
     ]
-    union_id <- ordered_candidates$idx[1]
-    # Deterministically select polygon to merge with
-    neigh_union_id <- relate[[union_id]]
-    neigh_id <- neigh_union_id[which.max(border_mat[union_id, neigh_union_id])]
-    # Update relationships
-    union_list[[length(union_list) + 1]] <- sort(unique(c(
-      union_list[[union_id]],
-      union_list[[neigh_id]]
-    )))
-    union_list <- union_list[-c(neigh_id, union_id)]
-    area_vec <- c(
-      area_vec[-c(neigh_id, union_id)],
-      sum(area_vec[c(neigh_id, union_id)])
+    uid_chr <- ordered_candidates$id[1]
+    # Deterministically select polygon to merge with (largest shared border)
+    uid_neighbors_int <- relate[[uid_chr]]
+    uid_neighbors_chr <- as.character(uid_neighbors_int)
+    nid_chr <- names(which.max(borders[[uid_chr]][uid_neighbors_chr]))
+    new_id <- next_id
+    new_chr <- as.character(new_id)
+    next_id <- next_id + 1L
+    # Compute new neighbors before modifying relate
+    nid_neighbors_int <- relate[[nid_chr]]
+    new_neighbors_int <- setdiff(
+      union(uid_neighbors_int, nid_neighbors_int),
+      c(as.integer(uid_chr), as.integer(nid_chr))
     )
-    building_vec <- c(
-      building_vec[-c(neigh_id, union_id)],
-      sum(building_vec[c(neigh_id, union_id)])
+    new_neighbors_chr <- as.character(new_neighbors_int)
+    # union_list
+    union_list[[new_chr]] <- sort(unique(c(union_list[[uid_chr]], union_list[[nid_chr]])))
+    union_list[[uid_chr]] <- NULL
+    union_list[[nid_chr]] <- NULL
+    # area, building
+    area_vec[new_chr] <- area_vec[uid_chr] + area_vec[nid_chr]
+    area_vec <- area_vec[!names(area_vec) %in% c(uid_chr, nid_chr)]
+    building_vec[new_chr] <- building_vec[uid_chr] + building_vec[nid_chr]
+    building_vec <- building_vec[!names(building_vec) %in% c(uid_chr, nid_chr)]
+    # perimeter
+    shared_border_len <- borders[[uid_chr]][nid_chr]
+    if (is.na(shared_border_len)) shared_border_len <- 0
+    perimeter_vec[new_chr] <- perimeter_vec[uid_chr] + perimeter_vec[nid_chr] -
+      2 * shared_border_len
+    perimeter_vec <- perimeter_vec[!names(perimeter_vec) %in% c(uid_chr, nid_chr)]
+    # borders
+    uid_borders <- borders[[uid_chr]]
+    nid_borders <- borders[[nid_chr]]
+    combined_neigh_chr <- setdiff(
+      union(names(uid_borders), names(nid_borders)),
+      c(uid_chr, nid_chr)
     )
-    n_relate <- length(relate)
-    relate[[n_relate + 1]] <- sort(unique(c(
-      relate[[union_id]],
-      relate[[neigh_id]]
-    )))
-    relate[[n_relate + 1]] <- relate[[n_relate + 1]][
-      -which(relate[[n_relate + 1]] %in% c(union_id, neigh_id))
-    ]
-    relate <- lapply(relate, function(x) {
-      vec <- replace(x, which(x %in% c(union_id, neigh_id)), n_relate + 1)
-      vec <- ifelse(
-        vec > union_id & vec > neigh_id,
-        vec - 2,
-        ifelse(vec > union_id | vec > neigh_id, vec - 1, vec)
+    new_borders_vec <- vapply(combined_neigh_chr, function(k_chr) {
+      v_uid <- if (k_chr %in% names(uid_borders)) uid_borders[k_chr] else 0
+      v_nid <- if (k_chr %in% names(nid_borders)) nid_borders[k_chr] else 0
+      v_uid + v_nid
+    }, numeric(1))
+    names(new_borders_vec) <- combined_neigh_chr
+    for (k_chr in combined_neigh_chr) {
+      old_k <- borders[[k_chr]]
+      borders[[k_chr]] <- c(
+        old_k[!names(old_k) %in% c(uid_chr, nid_chr)],
+        stats::setNames(new_borders_vec[k_chr], new_chr)
       )
-      sort(unique(vec))
-    })
-    relate <- relate[-c(neigh_id, union_id)]
+    }
+    borders[[new_chr]] <- new_borders_vec
+    borders[[uid_chr]] <- NULL
+    borders[[nid_chr]] <- NULL
+    # relate
+    relate[[new_chr]] <- new_neighbors_int
+    for (k_chr in new_neighbors_chr) {
+      old_k <- relate[[k_chr]]
+      relate[[k_chr]] <- c(
+        setdiff(old_k, c(as.integer(uid_chr), as.integer(nid_chr))),
+        new_id
+      )
+    }
+    relate[[uid_chr]] <- NULL
+    relate[[nid_chr]] <- NULL
     relate_vec <- lengths(relate)
-    shared_border_len <- border_mat[union_id, neigh_id]
-    new_perimeter <- perimeter_vec[union_id] +
-      perimeter_vec[neigh_id] -
-      (2 * shared_border_len)
-    perimeter_vec <- c(perimeter_vec[-c(neigh_id, union_id)], new_perimeter)
-    # Critical to evaluate border matrix before updating enclosed
-    if (length(union_list) > 1) {
-      border_mat_tmp <- rbind(
-        border_mat[-c(neigh_id, union_id), ],
-        colSums(border_mat[c(neigh_id, union_id), ])
-      )
-      border_mat <- cbind(
-        border_mat_tmp[, -c(neigh_id, union_id)],
-        rowSums(border_mat_tmp[, c(neigh_id, union_id)])
-      )
-      border_mat[nrow(border_mat), ncol(border_mat)] <- 0
+    # enclosed_vec
+    enclosed_vec <- enclosed_vec[!names(enclosed_vec) %in% c(uid_chr, nid_chr)]
+    enclosed_vec[new_chr] <- check_enclosed(new_chr)
+    for (k_chr in new_neighbors_chr) {
+      enclosed_vec[k_chr] <- check_enclosed(k_chr)
     }
-    enclosed_vec <- c(enclosed_vec[-c(neigh_id, union_id)], 0)
-    if (relate_vec[length(relate_vec)] == 1) {
-      if (
-        border_mat[nrow(border_mat), relate[[length(relate)]][1]] >
-          enclosed_threshold * perimeter_vec[length(perimeter_vec)]
-      ) {
-        enclosed_vec[length(enclosed_vec)] <- 1
-      }
-    }
-    # Evaluate neighbours of the merged polygon
-    if (length(relate[[length(relate)]]) > 0) {
-      relate_tmp <- relate[[length(relate)]]
-      for (i in seq_along(relate_tmp)) {
-        enclosed_vec[relate_tmp[i]] <- 0
-        if (length(relate[[relate_tmp[i]]]) == 1) {
-          if (
-            border_mat[relate_tmp[i], relate[[relate_tmp[i]]][1]] >
-              enclosed_threshold * perimeter_vec[relate_tmp[i]]
-          ) {
-            enclosed_vec[relate_tmp[i]] <- 1
-          }
-        }
-      }
-    }
-    compactness_vec <- compactness_vec[-c(neigh_id, union_id)]
-    compactness_merge <- compactness_merge[-c(neigh_id, union_id)]
-    # Update compactness for the merged polygon when compactness is active
+    # compactness
+    compactness_vec <- compactness_vec[!names(compactness_vec) %in% c(uid_chr, nid_chr)]
+    compactness_merge <- compactness_merge[!names(compactness_merge) %in% c(uid_chr, nid_chr)]
     if (compactness_active) {
-      compactness_iter <- compactness_iter + 1
-      new_poly_sf <- sf::st_sf(sf::st_union(input_polygons[
-        union_list[[length(union_list)]],
-      ]))
-      new_compactness_val <- switch(
-        compact_method,
-        "desplim" = desplim_compactness(new_poly_sf)$compactness,
-        "polsby" = redistmetrics::comp_polsby(plans = 1, shp = new_poly_sf),
-        "schwartz" = redistmetrics::comp_schwartz(plans = 1, shp = new_poly_sf),
-        "convex_hull" = redistmetrics::comp_ch(plans = 1, shp = new_poly_sf),
-        1
-      )
-      compactness_vec <- c(compactness_vec, new_compactness_val)
-      compactness_merge <- ifelse(
-        !is.na(compactness_vec) & compactness_vec < compact_threshold,
-        1,
-        0
-      )
-      n_allow <- floor(
-        compact_allow * (length(compactness_merge) + sum(relate_vec == 0))
-      )
-      if (sum(compactness_merge == 1) > n_allow && n_allow > 0) {
-        scores_filter <- compactness_vec[which(compactness_merge == 1)]
-        if (length(scores_filter) > n_allow) {
-          cutoff_score <- sort(scores_filter, decreasing = TRUE)[n_allow]
-          compactness_merge[which(
-            compactness_merge == 1 & compactness_vec >= cutoff_score
-          )] <- 0
-        }
-      } else {
-        compactness_merge <- rep(0, length(compactness_merge))
-      }
+      compactness_iter <- compactness_iter + 1L
+      new_poly_sf <- sf::st_sf(sf::st_union(input_polygons[union_list[[new_chr]], ]))
+      compactness_vec[new_chr] <- compute_compactness(new_poly_sf)
+      compactness_merge <- !is.na(compactness_vec) & compactness_vec < compact_threshold
+      compactness_merge <- filter_compactness(compactness_merge, compactness_vec)
     } else {
-      compactness_vec <- c(compactness_vec, NA_real_)
-      compactness_merge <- c(compactness_merge, 0)
+      compactness_vec[new_chr] <- NA_real_
+      compactness_merge[new_chr] <- FALSE
     }
   }
-  polygon_union <- lapply(union_list, function(x) {
-    sf::st_as_sf(sf::st_union(input_polygons[x, ]))
-  })
-  polygon_union <- do.call(rbind, polygon_union)
+  final_ids <- names(union_list)
+  polygon_union <- do.call(rbind, lapply(final_ids, function(id_c) {
+    sf::st_as_sf(sf::st_union(input_polygons[union_list[[id_c]], ]))
+  }))
   polygon_union <- .desplim_rename_geom(polygon_union)
-  polygon_union$area <- area_vec
-  polygon_union$compactness <- compactness_vec
+  polygon_union$area <- area_vec[final_ids]
+  polygon_union$compactness <- compactness_vec[final_ids]
   if (building_threshold > 0) {
-    polygon_union$building <- building_vec
+    polygon_union$building <- building_vec[final_ids]
   }
-  return(polygon_union)
+  polygon_union
 }

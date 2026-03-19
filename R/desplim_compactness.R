@@ -10,7 +10,7 @@
 #' compactness metric. If `input` contains geometries of type MULTIPOLYGON, they
 #' are cast to POLYGON before computing.
 #' @examples
-#' # Create simple plygon
+#' # Create simple polygon
 #' polygon_coords <- list(matrix(
 #'  c(0, 0, 0, 1, 1, 3, -1, 2, -3, 1, -2, 0, 0, 0),
 #'  ncol = 2,
@@ -31,7 +31,7 @@ desplim_compactness <- function(input, keep_metrics = FALSE) {
   if (!all(input_geom_type %in% c("MULTIPOLYGON", "POLYGON"))) {
     stop("Input should be MULTIPOLYGON or POLYGON")
   }
-  if ("MULTILMULTIPOLYGON" %in% input_geom_type) {
+  if ("MULTIPOLYGON" %in% input_geom_type) {
     input <- sf::st_cast(input, "POLYGON", warn = FALSE)
   }
   districts <- input
@@ -41,59 +41,22 @@ desplim_compactness <- function(input, keep_metrics = FALSE) {
     package = "desplim"
   ))
   districts$id <- seq_len(nrow(districts))
-  districts$boyce <- redistmetrics::comp_bc(
-    plans = districts$id,
-    shp = districts
+  metric_fns <- list(
+    boyce     = redistmetrics::comp_bc,
+    box_reock = redistmetrics::comp_box_reock,
+    hull      = redistmetrics::comp_ch,
+    len_wid   = redistmetrics::comp_lw,
+    polsby    = redistmetrics::comp_polsby,
+    reock     = redistmetrics::comp_reock,
+    schwartz  = redistmetrics::comp_schwartz,
+    skew      = redistmetrics::comp_skew,
+    sym_x     = redistmetrics::comp_x_sym,
+    sym_y     = redistmetrics::comp_y_sym
   )
-  districts$box_reock <- redistmetrics::comp_box_reock(
-    plans = districts$id,
-    shp = districts
-  )
-  districts$hull <- redistmetrics::comp_ch(
-    plans = districts$id,
-    shp = districts
-  )
-  districts$len_wid <- redistmetrics::comp_lw(
-    plans = districts$id,
-    shp = districts
-  )
-  districts$polsby <- redistmetrics::comp_polsby(
-    plans = districts$id,
-    shp = districts
-  )
-  districts$reock <- redistmetrics::comp_reock(
-    plans = districts$id,
-    shp = districts
-  )
-  districts$schwartz <- redistmetrics::comp_schwartz(
-    plans = districts$id,
-    shp = districts
-  )
-  districts$skew <- redistmetrics::comp_skew(
-    plans = districts$id,
-    shp = districts
-  )
-  districts$sym_x <- redistmetrics::comp_x_sym(
-    plans = districts$id,
-    shp = districts
-  )
-  districts$sym_y <- redistmetrics::comp_y_sym(
-    plans = districts$id,
-    shp = districts
-  )
-  districts_nogeom_temp <- sf::st_drop_geometry(districts)
-  districts_nogeom <- districts_nogeom_temp[, c(
-    "boyce",
-    "box_reock",
-    "hull",
-    "len_wid",
-    "polsby",
-    "reock",
-    "schwartz",
-    "skew",
-    "sym_x",
-    "sym_y"
-  )]
+  for (nm in names(metric_fns)) {
+    districts[[nm]] <- metric_fns[[nm]](plans = districts$id, shp = districts)
+  }
+  districts_nogeom <- sf::st_drop_geometry(districts)[, names(metric_fns)]
   districts_nogeom$compactness <- stats::predict(
     xgb_model,
     newdata = as.matrix(districts_nogeom)
@@ -103,5 +66,5 @@ desplim_compactness <- function(input, keep_metrics = FALSE) {
   } else {
     input <- cbind(input, "compactness" = districts_nogeom[, "compactness"])
   }
-  return(input)
+  input
 }

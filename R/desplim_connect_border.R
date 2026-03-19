@@ -102,21 +102,19 @@ desplim_connect_border <- function(
     stop("Input polygon must be an sf object")
   }
   output_crs <- sf::st_crs(input_linestring)
-  if (is.na(output_crs) && inherits(input_polygon, "sf")) {
+  if (is.na(output_crs)) {
     output_crs <- sf::st_crs(input_polygon)
   }
   if (is.na(output_crs)) {
     warning("Input linestring and polygon have no CRS")
-    output_crs <- sf::st_crs(NA)
   }
   empty_lines_sf <- sf::st_sf(geometry = sf::st_sfc(crs = output_crs))
   if (nrow(input_linestring) == 0) {
-    ("Input linestring is empty.")
+    warning("Input linestring is empty.")
     return(empty_lines_sf)
   }
   if (nrow(input_polygon) == 0) {
     stop("Input polygon is empty.")
-    return(empty_lines_sf)
   }
   if (sf::st_crs(input_linestring) != sf::st_crs(input_polygon)) {
     stop("Input linestring and polygon must have the same CRS.")
@@ -147,7 +145,7 @@ desplim_connect_border <- function(
   if (attr(input_polygon, "sf_column") != "geometry") {
     input_polygon <- .desplim_rename_geom(input_polygon)
   }
-  processed_buildings_geom <- NULL
+  buildings_geom <- NULL
   if (!is.null(input_buildings)) {
     if (!inherits(input_buildings, "sf")) {
       stop("Input buildings must be an sf object if provided.")
@@ -165,7 +163,7 @@ desplim_connect_border <- function(
       if (attr(input_buildings, "sf_column") != "geometry") {
         input_buildings <- .desplim_rename_geom(input_buildings)
       }
-      processed_buildings_geom <- sf::st_geometry(input_buildings)
+      buildings_geom <- sf::st_geometry(input_buildings)
     } else {
       input_buildings <- NULL
     }
@@ -184,7 +182,7 @@ desplim_connect_border <- function(
     return(empty_lines_sf)
   }
   border_int_sf <- NULL
-  if (!is.null(border_int_geom) && length(border_int_geom) > 0) {
+  if (length(border_int_geom) > 0) {
     border_int_points <- suppressWarnings(sf::st_collection_extract(
       border_int_geom,
       "POINT"
@@ -202,33 +200,33 @@ desplim_connect_border <- function(
     border_int_sf <- sf::st_sf(geometry = empty_sfc_for_int)
   }
   if (nrow(border_int_sf) > 0 && nrow(border_nodes) > 0) {
-    indices_to_remove_bn <- unique(unlist(sf::st_is_within_distance(
+    rm_bn <- unique(unlist(sf::st_is_within_distance(
       border_int_sf,
       border_nodes,
       dist = distance_intersect
     )))
-    if (length(indices_to_remove_bn) > 0) {
-      border_nodes <- border_nodes[-indices_to_remove_bn, , drop = FALSE]
+    if (length(rm_bn) > 0) {
+      border_nodes <- border_nodes[-rm_bn, , drop = FALSE]
     }
   }
   if (nrow(border_nodes) == 0) {
-    ("No candidate border nodes found after filtering by distance_intersect.")
+    warning("No candidate border nodes found after filtering by distance_intersect.")
     return(empty_lines_sf)
   }
   border_nodes_order <- seq_len(nrow(border_nodes))
   if (nrow(border_int_sf) > 0) {
     dist_bn_to_int <- sf::st_distance(border_nodes, border_int_sf)
     if (ncol(dist_bn_to_int) > 0) {
-      min_distances_to_int <- suppressWarnings(apply(
+      min_dist <- suppressWarnings(apply(
         dist_bn_to_int,
         1,
         min,
         na.rm = TRUE
       ))
-      min_distances_to_int[
-        is.infinite(min_distances_to_int) & min_distances_to_int < 0
+      min_dist[
+        is.infinite(min_dist) & min_dist < 0
       ] <- Inf
-      border_nodes_order <- order(min_distances_to_int)
+      border_nodes_order <- order(min_dist)
     }
   }
   lines_nodes <- desplim_all_nodes(input_linestring, cast_substring = TRUE)
@@ -236,30 +234,29 @@ desplim_connect_border <- function(
     return(empty_lines_sf)
   }
   if (nrow(border_int_sf) > 0 && nrow(lines_nodes) > 0) {
-    indices_to_remove_ln1 <- unique(unlist(sf::st_is_within_distance(
+    rm_ln <- unique(unlist(sf::st_is_within_distance(
       border_int_sf,
       lines_nodes,
       dist = distance_intersect
     )))
-    if (length(indices_to_remove_ln1) > 0) {
-      lines_nodes <- lines_nodes[-indices_to_remove_ln1, , drop = FALSE]
+    if (length(rm_ln) > 0) {
+      lines_nodes <- lines_nodes[-rm_ln, , drop = FALSE]
     }
   }
   if (nrow(lines_nodes) == 0) {
     warning(
-      "No lines_nodes remain after filtering near existing 
-    intersections."
+      "No lines_nodes remain after filtering near existing intersections."
     )
     return(empty_lines_sf)
   }
   if (nrow(border_nodes) > 0 && nrow(lines_nodes) > 0) {
-    keep_ln_logical <- lengths(sf::st_is_within_distance(
+    keep_ln <- lengths(sf::st_is_within_distance(
       lines_nodes,
       border_nodes,
       dist = distance_nodes
     )) >
       0
-    lines_nodes <- lines_nodes[keep_ln_logical, , drop = FALSE]
+    lines_nodes <- lines_nodes[keep_ln, , drop = FALSE]
   } else {
     lines_nodes <- lines_nodes[0, , drop = FALSE]
   }
@@ -271,64 +268,43 @@ desplim_connect_border <- function(
     nrow = nrow(border_nodes),
     ncol = num_candidates
   )
-  if (nrow(lines_nodes) > 0) {
-    dist_matrix_bn_ln <- sf::st_distance(border_nodes, lines_nodes)
-
-    for (i_bn in seq_len(nrow(border_nodes))) {
-      row_distances <- dist_matrix_bn_ln[i_bn, ]
-      k_to_select <- min(num_candidates, length(row_distances))
-      if (k_to_select > 0) {
-        ordered_indices_for_row <- order(row_distances)[1:k_to_select]
-        node_match[i_bn, 1:k_to_select] <- ordered_indices_for_row
-      }
+  dist_bn_ln <- sf::st_distance(border_nodes, lines_nodes)
+  for (i_bn in seq_len(nrow(border_nodes))) {
+    row_dist <- dist_bn_ln[i_bn, ]
+    k <- min(num_candidates, length(row_dist))
+    if (k > 0) {
+      top_idx <- order(row_dist)[seq_len(k)]
+      node_match[i_bn, seq_len(k)] <- top_idx
     }
   }
-  dist_mat_bn_bn <- sf::st_is_within_distance(
+  dist_bn_bn <- sf::st_is_within_distance(
     border_nodes,
     dist = distance_intersect
   )
-  ls_list_sfg <- list()
-  candidate_line_attributes_list <- list()
+  n_max_segs <- nrow(border_nodes) * num_candidates
+  seg_list <- vector("list", n_max_segs)
+  border_node_idx_vec <- integer(n_max_segs)
+  seg_count <- 0L
   coords_border_nodes <- sf::st_coordinates(border_nodes)
   coords_lines_nodes <- sf::st_coordinates(lines_nodes)
-  if (nrow(lines_nodes) > 0) {
-    for (i in seq_len(nrow(border_nodes))) {
-      current_border_node_coord <- coords_border_nodes[
-        i,
-        c("X", "Y"),
-        drop = FALSE
-      ]
-      for (j_cand in 1:num_candidates) {
-        ln_idx_in_lines_nodes <- node_match[i, j_cand]
-        if (is.na(ln_idx_in_lines_nodes)) {
-          next
-        }
-        current_line_node_coord <- coords_lines_nodes[
-          ln_idx_in_lines_nodes,
-          c("X", "Y"),
-          drop = FALSE
-        ]
-        segment_coords <- rbind(
-          current_border_node_coord,
-          current_line_node_coord
-        )
-        ls_list_sfg[[length(ls_list_sfg) + 1]] <- sf::st_linestring(
-          segment_coords
-        )
-        candidate_line_attributes_list[[
-          length(candidate_line_attributes_list) + 1
-        ]] <-
-          data.frame(border_node_row_idx = i)
-      }
+  for (i in seq_len(nrow(border_nodes))) {
+    bn_coord <- coords_border_nodes[i, c("X", "Y")]
+    for (j_cand in seq_len(num_candidates)) {
+      ln_idx <- node_match[i, j_cand]
+      if (is.na(ln_idx)) next
+      ln_coord <- coords_lines_nodes[ln_idx, c("X", "Y")]
+      seg_count <- seg_count + 1L
+      seg_list[[seg_count]] <- sf::st_linestring(rbind(bn_coord, ln_coord))
+      border_node_idx_vec[seg_count] <- i
     }
   }
-  if (length(ls_list_sfg) == 0) {
+  if (seg_count == 0L) {
     warning("No candidate lines could be initially formed.")
     return(empty_lines_sf)
   }
   border_connect_filter <- sf::st_sf(
-    do.call(rbind, candidate_line_attributes_list),
-    geometry = sf::st_sfc(ls_list_sfg, crs = output_crs)
+    data.frame(border_node_row_idx = border_node_idx_vec[seq_len(seg_count)]),
+    geometry = sf::st_sfc(seg_list[seq_len(seg_count)], crs = output_crs)
   )
   border_connect_filter$internal <- sf::st_covered_by(
     sf::st_geometry(border_connect_filter),
@@ -348,7 +324,7 @@ desplim_connect_border <- function(
   ) {
     border_connect_filter$crosses_buildings <- lengths(sf::st_crosses(
       sf::st_geometry(border_connect_filter),
-      processed_buildings_geom,
+      buildings_geom,
       sparse = TRUE
     )) >
       0
@@ -373,30 +349,38 @@ desplim_connect_border <- function(
       )
     }
   )
-  border_connect_out_list <- list()
-  current_processing_order <- border_nodes_order
-  max_angle <- min_angle <- NULL
-  while (length(current_processing_order) > 0) {
-    current_bn_processing_idx <- current_processing_order[1]
-    candidate_lines_bn_list <-
-      candidate_lines[[as.character(
-        current_bn_processing_idx
-      )]]
-    selected_connection_sf <- NULL
+  all_valid_cands <- do.call(
+    rbind,
+    Filter(function(x) nrow(x) > 0, candidate_lines)
+  )
+  if (!is.null(all_valid_cands) && nrow(all_valid_cands) > 0) {
+    all_valid_cands <- desplim_angles(
+      all_valid_cands,
+      border_substring,
+      cast_substring = FALSE
+    )
+    all_valid_cands$length <- as.numeric(sf::st_length(all_valid_cands))
+    all_valid_split <- split(
+      all_valid_cands,
+      all_valid_cands$border_node_row_idx
+    )
+    for (nm in names(all_valid_split)) {
+      candidate_lines[[nm]] <- all_valid_split[[nm]]
+    }
+  }
+  out_list <- list()
+  proc_order <- border_nodes_order
+  max_angle <- min_angle <- NULL # suppress R CMD check NOTE for subset() NSE
+  while (length(proc_order) > 0) {
+    bn_idx <- proc_order[1]
+    bn_cands <- candidate_lines[[as.character(bn_idx)]]
+    selected <- NULL
     if (
-      !is.null(candidate_lines_bn_list) &&
-        nrow(candidate_lines_bn_list) > 0
+      !is.null(bn_cands) &&
+        nrow(bn_cands) > 0
     ) {
-      connections_with_angles_sf <- desplim_angles(
-        candidate_lines_bn_list,
-        border_substring,
-        cast_substring = FALSE
-      )
-      connections_with_angles_sf$length <- as.numeric(sf::st_length(
-        connections_with_angles_sf
-      ))
-      valid_connections_sf <- subset(
-        connections_with_angles_sf,
+      valid_cands <- subset(
+        bn_cands,
         max_angle > minimum_angle &
           max_angle < (180.0 - minimum_angle) &
           min_angle > minimum_angle &
@@ -404,46 +388,39 @@ desplim_connect_border <- function(
           length < distance_nodes &
           length > 1e-9
       )
-      if (nrow(valid_connections_sf) > 0) {
-        if (nrow(valid_connections_sf) > 1) {
-          min_len <- min(valid_connections_sf$length, na.rm = TRUE)
-          selected_connection_sf <- valid_connections_sf[
-            which(abs(valid_connections_sf$length - min_len) < 1e-9)[1],
-          ]
-        } else {
-          selected_connection_sf <- valid_connections_sf
-        }
+      if (nrow(valid_cands) > 0) {
+        selected <- valid_cands[which.min(valid_cands$length), ]
       }
     }
-    if (!is.null(selected_connection_sf) && nrow(selected_connection_sf) == 1) {
-      border_connect_out_list[[
-        length(border_connect_out_list) + 1
-      ]] <- selected_connection_sf
-      nodes_rm_from_order <- dist_mat_bn_bn[[current_bn_processing_idx]]
-      nodes_rm_from_order <- unique(c(
-        nodes_rm_from_order,
-        current_bn_processing_idx
+    if (!is.null(selected) && nrow(selected) == 1) {
+      out_list[[
+        length(out_list) + 1
+      ]] <- selected
+      rm_nodes <- dist_bn_bn[[bn_idx]]
+      rm_nodes <- unique(c(
+        rm_nodes,
+        bn_idx
       ))
-      current_processing_order <- current_processing_order[
-        !(current_processing_order %in% nodes_rm_from_order)
+      proc_order <- proc_order[
+        !(proc_order %in% rm_nodes)
       ]
     } else {
-      current_processing_order <- current_processing_order[
-        current_processing_order != current_bn_processing_idx
+      proc_order <- proc_order[
+        proc_order != bn_idx
       ]
     }
   }
-  final_output_sf <- NULL
-  if (length(border_connect_out_list) > 0) {
-    final_output_sf <- do.call(rbind, border_connect_out_list)
-    if (!inherits(final_output_sf, "sf")) {
-      final_output_sf <- sf::st_as_sf(final_output_sf)
+  out <- NULL
+  if (length(out_list) > 0) {
+    out <- do.call(rbind, out_list)
+    if (!inherits(out, "sf")) {
+      out <- sf::st_as_sf(out)
     }
-    sf::st_crs(final_output_sf) <- output_crs
-    final_output_sf <- .desplim_rename_geom(final_output_sf)
-    final_output_sf <- final_output_sf[, "geometry", drop = FALSE]
+    sf::st_crs(out) <- output_crs
+    out <- .desplim_rename_geom(out)
+    out <- out[, "geometry", drop = FALSE]
   } else {
-    final_output_sf <- empty_lines_sf
+    out <- empty_lines_sf
   }
-  return(final_output_sf)
+  out
 }

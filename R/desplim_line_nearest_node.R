@@ -86,19 +86,12 @@ desplim_line_nearest_node <- function(
   if (sf::st_crs(input_nodes) != sf::st_crs(input_lines)) {
     stop("Input nodes and lines should be in the same CRS")
   }
-  if (
-    any(
-      !unique(sf::st_geometry_type(input_nodes)) %in% c("POINT", "MULTIPOINT")
-    )
-  ) {
+  geom_type_nodes <- unique(sf::st_geometry_type(input_nodes))
+  geom_type_lines <- unique(sf::st_geometry_type(input_lines))
+  if (any(!geom_type_nodes %in% c("POINT", "MULTIPOINT"))) {
     stop("Point input should be POINT or MULTIPOINT")
   }
-  if (
-    any(
-      !unique(sf::st_geometry_type(input_lines)) %in%
-        c("LINESTRING", "MULTILINESTRING")
-    )
-  ) {
+  if (any(!geom_type_lines %in% c("LINESTRING", "MULTILINESTRING"))) {
     stop("Lines input should be LINESTRING or MULTILINESTRING")
   }
   if (
@@ -110,19 +103,11 @@ desplim_line_nearest_node <- function(
   ) {
     stop("Input buildings should be POLYGON or MULTIPOLYGON")
   }
-  if (any(unique(sf::st_geometry_type(input_lines)) == "MULTILINESTRING")) {
-    input_lines <- sf::st_cast(
-      input_lines,
-      "LINESTRING",
-      warn = FALSE
-    )
+  if (any(geom_type_lines == "MULTILINESTRING")) {
+    input_lines <- sf::st_cast(input_lines, "LINESTRING", warn = FALSE)
   }
-  if (any(unique(sf::st_geometry_type(input_nodes)) == "MULTIPOINT")) {
-    input_nodes <- sf::st_cast(
-      input_nodes,
-      "POINT",
-      warn = FALSE
-    )
+  if (any(geom_type_nodes == "MULTIPOINT")) {
+    input_nodes <- sf::st_cast(input_nodes, "POINT", warn = FALSE)
   }
   if (nrow(input_nodes) == 0) {
     stop("Input nodes is empty.")
@@ -141,7 +126,7 @@ desplim_line_nearest_node <- function(
       input_buildings <- .desplim_rename_geom(input_buildings)
     }
   }
-  all_nodes <- desplim_all_nodes(input_lines)
+  all_nodes <- desplim_all_nodes(input_lines, cast_substring = !cast_substring)
   nodes_inter_list <- lengths(sf::st_intersects(all_nodes, input_nodes)) > 0
   subset_nodes <- all_nodes[!nodes_inter_list, ]
   if (combine_nodes) {
@@ -172,21 +157,17 @@ desplim_line_nearest_node <- function(
       sf::st_nearest_feature(input_nodes, subset_nodes),
     ]
   }
-  line_nearest_node <- sf::st_sfc(mapply(
-    function(a, b) {
-      union <- sf::st_union(a, b)
-      if (sf::st_geometry_type(union) %in% "MULTIPOINT") {
-        lnn <- sf::st_cast(union, "LINESTRING", warn = FALSE)
-      } else {
-        lnn <- NULL
-      }
-      return(lnn)
-    },
-    sf::st_geometry(input_nodes),
-    sf::st_geometry(combined_nearest_node),
-    SIMPLIFY = FALSE
-  ))
-  sf::st_crs(line_nearest_node) <- sf::st_crs(input_nodes)
+  coords_a <- sf::st_coordinates(input_nodes)[, c("X", "Y")]
+  coords_b <- sf::st_coordinates(combined_nearest_node)[, c("X", "Y")]
+  identical_pts <- coords_a[, "X"] == coords_b[, "X"] &
+    coords_a[, "Y"] == coords_b[, "Y"]
+  line_nearest_node <- sf::st_sfc(
+    lapply(seq_len(nrow(coords_a)), function(i) {
+      if (identical_pts[i]) return(sf::st_linestring())
+      sf::st_linestring(rbind(coords_a[i, ], coords_b[i, ]))
+    }),
+    crs = sf::st_crs(input_nodes)
+  )
   if (ignore_equal) {
     line_nearest_node_equal <- lengths(sf::st_equals(
       line_nearest_node,
@@ -208,5 +189,5 @@ desplim_line_nearest_node <- function(
   }
   line_nearest_node <- .desplim_rm_duplicate_geoms(line_nearest_node)
   line_nearest_node <- .desplim_rename_geom(line_nearest_node)
-  return(line_nearest_node)
+  line_nearest_node
 }

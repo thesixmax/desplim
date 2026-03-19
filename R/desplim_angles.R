@@ -49,10 +49,8 @@ desplim_angles <- function(
   if (!inherits(reference_lines, "sf")) {
     stop("Reference lines have to be of class sf")
   }
-  output_crs <- sf::st_crs(input_lines)
-  if (is.na(output_crs)) {
+  if (is.na(sf::st_crs(input_lines))) {
     warning("Input lines have no CRS")
-    output_crs <- sf::st_crs(NA)
   }
   if (nrow(input_lines) == 0 || nrow(reference_lines) == 0) {
     out_empty <- input_lines[0, , drop = FALSE]
@@ -65,12 +63,12 @@ desplim_angles <- function(
     stop("Input and reference lines should be in the same CRS")
   }
   valid_geom_types <- c("LINESTRING", "MULTILINESTRING")
-  if (!all(unique(sf::st_geometry_type(input_lines)) %in% valid_geom_types)) {
+  input_geom_types <- unique(sf::st_geometry_type(input_lines))
+  ref_geom_types   <- unique(sf::st_geometry_type(reference_lines))
+  if (!all(input_geom_types %in% valid_geom_types)) {
     stop("Input lines should be LINESTRING or MULTILINESTRING")
   }
-  if (
-    !all(unique(sf::st_geometry_type(reference_lines)) %in% valid_geom_types)
-  ) {
+  if (!all(ref_geom_types %in% valid_geom_types)) {
     stop("Reference lines should be LINESTRING or MULTILINESTRING")
   }
   if (attr(input_lines, "sf_column") != "geometry") {
@@ -79,19 +77,11 @@ desplim_angles <- function(
   if (attr(reference_lines, "sf_column") != "geometry") {
     reference_lines <- .desplim_rename_geom(reference_lines)
   }
-  if (any(unique(sf::st_geometry_type(input_lines)) == "MULTILINESTRING")) {
-    input_lines <- sf::st_cast(
-      input_lines,
-      "LINESTRING",
-      warn = FALSE
-    )
+  if (any(input_geom_types == "MULTILINESTRING")) {
+    input_lines <- sf::st_cast(input_lines, "LINESTRING", warn = FALSE)
   }
-  if (any(unique(sf::st_geometry_type(reference_lines)) == "MULTILINESTRING")) {
-    reference_lines <- sf::st_cast(
-      reference_lines,
-      "LINESTRING",
-      warn = FALSE
-    )
+  if (any(ref_geom_types == "MULTILINESTRING")) {
+    reference_lines <- sf::st_cast(reference_lines, "LINESTRING", warn = FALSE)
   }
   if (cast_substring) {
     input_lines <- desplim_cast_substring(input_lines)
@@ -115,6 +105,8 @@ desplim_angles <- function(
       next
     }
     coords_input <- sf::st_coordinates(current_input_sfc)
+    n_input <- nrow(coords_input)
+    xy_input <- coords_input[, c("X", "Y"), drop = FALSE]
     current_input_angle <- unlist(lapply(
       inter_ref_idx,
       function(k_idx) {
@@ -123,53 +115,21 @@ desplim_angles <- function(
           return(NA_real_)
         }
         coords_ref <- sf::st_coordinates(current_ref_sfc)
-        current_ref_angles <- vector()
-        for (v_input_idx in seq_len(nrow(coords_input))) {
-          pt_b_candidate_input <- coords_input[
-            v_input_idx,
-            c("X", "Y"),
-            drop = FALSE
-          ]
-          for (v_ref_idx in seq_len(nrow(coords_ref))) {
-            pt_b_candidate_ref <- coords_ref[
-              v_ref_idx,
-              c("X", "Y"),
-              drop = FALSE
-            ]
-            if (all(abs(pt_b_candidate_input - pt_b_candidate_ref) < 1e-9)) {
-              point_b <- t(pt_b_candidate_input)
-              other_v_input_idx <- if (
-                v_input_idx == 1 && nrow(coords_input) >= 2
-              ) {
-                2
-              } else if (nrow(coords_input) >= 2) {
-                1
-              } else {
-                NULL
-              }
-              if (is.null(other_v_input_idx)) {
-                next
-              }
-              point_a <- t(coords_input[
-                other_v_input_idx,
-                c("X", "Y"),
-                drop = FALSE
-              ])
-              other_v_ref_idx <- if (v_ref_idx == 1 && nrow(coords_ref) >= 2) {
-                2
-              } else if (nrow(coords_ref) >= 2) {
-                1
-              } else {
-                NULL
-              }
-              if (is.null(other_v_ref_idx)) {
-                next
-              }
-              point_c <- t(coords_ref[
-                other_v_ref_idx,
-                c("X", "Y"),
-                drop = FALSE
-              ])
+        n_ref <- nrow(coords_ref)
+        xy_ref <- coords_ref[, c("X", "Y"), drop = FALSE]
+        current_ref_angles <- numeric(0)
+        for (v_input_idx in seq_len(n_input)) {
+          pt_b_input <- xy_input[v_input_idx, , drop = FALSE]
+          for (v_ref_idx in seq_len(n_ref)) {
+            pt_b_ref <- xy_ref[v_ref_idx, , drop = FALSE]
+            if (all(abs(pt_b_input - pt_b_ref) < 1e-9)) {
+              point_b <- t(pt_b_input)
+              if (n_input < 2L) next
+              other_v_input_idx <- if (v_input_idx == 1L) 2L else 1L
+              point_a <- t(xy_input[other_v_input_idx, , drop = FALSE])
+              if (n_ref < 2L) next
+              other_v_ref_idx <- if (v_ref_idx == 1L) 2L else 1L
+              point_c <- t(xy_ref[other_v_ref_idx, , drop = FALSE])
               current_angle <- .angle_fun(point_a, point_b, point_c)
               if (!is.na(current_angle)) {
                 current_ref_angles <- c(current_ref_angles, current_angle)
@@ -194,19 +154,7 @@ desplim_angles <- function(
     }
   }
   final_out_sf <- input_lines
-  final_out_sf$min_angle <- NA_real_
-  final_out_sf$max_angle <- NA_real_
-  min_angles_vec <- sapply(angle_results_list, `[[`, "min_angle")
-  max_angles_vec <- sapply(angle_results_list, `[[`, "max_angle")
-  if (nrow(final_out_sf) == length(min_angles_vec)) {
-    final_out_sf$min_angle <- min_angles_vec
-  } else {
-    warning("Length mismatch assigning min_angle in desplim_angles")
-  }
-  if (nrow(final_out_sf) == length(max_angles_vec)) {
-    final_out_sf$max_angle <- max_angles_vec
-  } else {
-    warning("Length mismatch assigning max_angle in desplim_angles")
-  }
-  return(final_out_sf)
+  final_out_sf$min_angle <- vapply(angle_results_list, `[[`, numeric(1), "min_angle")
+  final_out_sf$max_angle <- vapply(angle_results_list, `[[`, numeric(1), "max_angle")
+  final_out_sf
 }

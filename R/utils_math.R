@@ -27,5 +27,5 @@
   ratio <- max(-1.0, min(1.0, ratio))
   angle_rad <- acos(ratio)
   angle_deg <- angle_rad * (180.0 / pi)
-  return(angle_deg)
+  angle_deg
 }

@@ -26,7 +26,7 @@ compactness metric. If \code{input} contains geometries of type MULTIPOLYGON, th
 are cast to POLYGON before computing.
 }
 \examples{
-# Create simple plygon
+# Create simple polygon
 polygon_coords <- list(matrix(
  c(0, 0, 0, 1, 1, 3, -1, 2, -3, 1, -2, 0, 0, 0),
  ncol = 2,

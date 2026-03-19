@@ -44,7 +44,6 @@ desplim_split_merge <- function(
   }
   if (is.na(output_crs)) {
     warning("Inputs have no CRS")
-    output_crs <- sf::st_crs(NA)
   }
   empty_sf <- sf::st_sf(geometry = sf::st_sfc(crs = output_crs))
   if (nrow(input_polygon) == 0) {
@@ -110,8 +109,7 @@ desplim_split_merge <- function(
       })))
     ) {
       warning(
-        "Some entries in line_type_hierarchy are not present in 
-        line_type_identifier"
+        "Some entries in line_type_hierarchy are not present in line_type_identifier"
       )
     }
     if (
@@ -120,8 +118,7 @@ desplim_split_merge <- function(
       })))
     ) {
       stop(
-        "At least one entry in line_type_hierarchy must be present in 
-        line_type_identifier"
+        "At least one entry in line_type_hierarchy must be present in line_type_identifier"
       )
     }
   }
@@ -130,10 +127,7 @@ desplim_split_merge <- function(
       stop("Package `future.apply` must be installed to use `parallel = TRUE`.")
     }
     if ("sequential" %in% class(future::plan())) {
-      warning(
-        "`parallel` set to TRUE, but no `future` plan set. Defaulting to 
-        `parallel = FALSE`"
-      )
+      warning("`parallel` set to TRUE, but no `future` plan set. Defaulting to `parallel = FALSE`")
       parallel <- FALSE
     }
   }
@@ -141,14 +135,27 @@ desplim_split_merge <- function(
     hierarchy <- list("all")
   } else {
     if (is.null(line_type_hierarchy)) {
-      # If an identifier is given but no hierarchy, all unique line types
-      # are processed together.
-      warning("line_type_hierarchy is NULL, using 'all' as default")
       hierarchy <- list("all")
     } else {
       hierarchy <- line_type_hierarchy
     }
   }
+  # Pre-compute argument lists once before the loop
+  args <- list(...)
+  split_arg_names <- names(formals(desplim_split))
+  merge_arg_names <- names(formals(desplim_merge))
+  border_arg_names <- names(formals(desplim_connect_border))
+  valid_arg_names <- unique(c(split_arg_names, merge_arg_names, border_arg_names))
+  unknown_args <- names(args)[!names(args) %in% valid_arg_names]
+  if (length(unknown_args) > 0) {
+    stop(paste0(
+      "Unknown additional argument(s) provided: '",
+      paste(unknown_args, collapse = "', '"),
+      "'"
+    ))
+  }
+  args_for_split <- args[names(args) %in% c(split_arg_names, border_arg_names)]
+  args_for_merge <- args[names(args) %in% merge_arg_names]
   poly_proc <- input_polygon
   for (i in seq_along(hierarchy)) {
     if (is.null(line_type_identifier)) {
@@ -167,64 +174,34 @@ desplim_split_merge <- function(
     }
     polygons_list <- split(poly_proc, seq_len(nrow(poly_proc)))
     .process_chunk <- function(poly_chunk) {
-      # Check arguments
-      args <- list(...)
-      split_arg_names <- names(formals(desplim_split))
-      merge_arg_names <- names(formals(desplim_merge))
-      border_arg_names <- names(formals(desplim_connect_border))
-      valid_arg_names <- unique(c(
-        split_arg_names,
-        merge_arg_names,
-        border_arg_names
-      ))
-      arg_names <- names(args)
-      unknown_args <- arg_names[!arg_names %in% valid_arg_names]
-      if (length(unknown_args) > 0) {
-        stop(paste0(
-          "Unknown additional argument(s) provided: '",
-          paste(unknown_args, collapse = "', '"),
-          "'"
-        ))
-      }
-      # Splitting procedure
-      args_for_split <- args[
-        names(args) %in% c(split_arg_names, border_arg_names)
-      ]
-      combined_split_args <- c(
+      poly_split <- do.call(desplim_split, c(
         list(
           input_polygon = poly_chunk,
           input_lines = lines_for_splitting,
           input_buildings = input_buildings
         ),
         args_for_split
-      )
-      poly_split <- do.call(desplim_split, combined_split_args)
-      # Merging procedure
-      args_for_merge <- args[names(args) %in% merge_arg_names]
-      combined_merge_args <- c(
+      ))
+      .desplim_rename_geom(do.call(desplim_merge, c(
         list(
           input_polygons = poly_split,
           input_buildings = input_buildings
         ),
         args_for_merge
-      )
-      poly_merge <- .desplim_rename_geom(do.call(
-        desplim_merge,
-        combined_merge_args
-      ))
-      return(poly_merge)
+      )))
     }
     if (parallel) {
       processed_list <- future.apply::future_lapply(
         polygons_list,
         .process_chunk,
-        future.seed = TRUE
+        future.seed = TRUE,
+        future.chunk.size = 1L
       )
     } else {
       processed_list <- lapply(polygons_list, .process_chunk)
     }
-    valid_results <- processed_list[!sapply(processed_list, is.null)]
+    valid_results <- processed_list[!vapply(processed_list, is.null, logical(1))]
     poly_proc <- do.call(rbind, valid_results)
   }
-  return(poly_proc)
+  poly_proc
 }

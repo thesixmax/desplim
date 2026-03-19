@@ -30,23 +30,16 @@ desplim_all_nodes <- function(input_lines, cast_substring = FALSE) {
   output_crs <- sf::st_crs(input_lines)
   if (is.na(output_crs)) {
     warning("Input lines have no CRS")
-    output_crs <- sf::st_crs(NA)
-  }
-  empty_sf <- sf::st_sf(geometry = sf::st_sfc(crs = output_crs))
-  if (nrow(input_lines) == 0) {
-    warning("Input is empty, no nodes identified")
-    return(empty_sf)
   }
   input_geom_types <- unique(sf::st_geometry_type(input_lines))
+  is_empty_collection <- length(input_geom_types) == 1 &&
+    input_geom_types == "GEOMETRYCOLLECTION" &&
+    all(sf::st_is_empty(input_lines))
+  if (nrow(input_lines) == 0 || is_empty_collection) {
+    warning("Input is empty, no nodes identified")
+    return(sf::st_sf(geometry = sf::st_sfc(crs = output_crs)))
+  }
   if (!all(input_geom_types %in% c("LINESTRING", "MULTILINESTRING"))) {
-    if (
-      length(input_geom_types) == 1 &&
-        input_geom_types == "GEOMETRYCOLLECTION" &&
-        all(sf::st_is_empty(input_lines))
-    ) {
-      warning("Input is empty, no nodes identified")
-      return(empty_sf)
-    }
     stop("Input should be LINESTRING or MULTILINESTRING")
   }
   if (any(input_geom_types == "MULTILINESTRING")) {
@@ -59,11 +52,10 @@ desplim_all_nodes <- function(input_lines, cast_substring = FALSE) {
     input_lines <- desplim_cast_substring(input_lines)
   }
   coords_matrix <- sf::st_coordinates(input_lines)
-  unique_coords_matrix <- unique(coords_matrix[, c("X", "Y"), drop = FALSE])
-  all_nodes <- sf::st_as_sf(
-    as.data.frame(unique_coords_matrix),
+  idx <- !duplicated(coords_matrix[, c("X", "Y")])
+  sf::st_as_sf(
+    as.data.frame(coords_matrix[idx, c("X", "Y"), drop = FALSE]),
     coords = c("X", "Y"),
     crs = output_crs
   )
-  return(all_nodes)
 }
