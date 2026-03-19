@@ -368,9 +368,9 @@ feature_importance_plot <- ggplot(
   importance_summary_df,
   aes(x = mean_dropout, y = reorder(variable, mean_dropout))
 ) +
-  geom_errorbarh(
+  geom_errorbar(
     aes(xmin = min_dropout, xmax = max_dropout),
-    height = 0.2,
+    width = 0.2,
     color = "gray50",
     linewidth = 0.9
   ) +
@@ -383,14 +383,8 @@ feature_importance_plot <- ggplot(
     x = "Increase in RMSE after feature shuffling",
     y = NULL
   )
-#> Warning: `geom_errorbarh()` was deprecated in ggplot2 4.0.0.
-#> ℹ Please use the `orientation` argument of `geom_errorbar()` instead.
-#> This warning is displayed once every 8 hours.
-#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-#> generated.
 
 print(feature_importance_plot)
-#> `height` was translated to `width`.
 ```
 
 ![](desplim-compactness_files/figure-html/feature-importance-1.png)
@@ -528,7 +522,7 @@ to perimeter complexity.
 devtools::session_info(pkgs = c("attached"))
 #> ─ Session info ───────────────────────────────────────────────────────────────
 #>  setting  value
-#>  version  R version 4.5.2 (2025-10-31)
+#>  version  R version 4.5.3 (2026-03-11)
 #>  os       Ubuntu 24.04.3 LTS
 #>  system   x86_64, linux-gnu
 #>  ui       X11
@@ -536,34 +530,34 @@ devtools::session_info(pkgs = c("attached"))
 #>  collate  C.UTF-8
 #>  ctype    C.UTF-8
 #>  tz       UTC
-#>  date     2025-12-26
+#>  date     2026-03-19
 #>  pandoc   3.1.11 @ /opt/hostedtoolcache/pandoc/3.1.11/x64/ (via rmarkdown)
 #>  quarto   NA
 #> 
 #> ─ Packages ───────────────────────────────────────────────────────────────────
 #>  package       * version date (UTC) lib source
-#>  broom         * 1.0.11  2025-12-04 [1] RSPM
+#>  broom         * 1.0.12  2026-01-27 [1] RSPM
 #>  DALEX         * 2.5.3   2025-10-16 [1] RSPM
-#>  DALEXtra      * 2.3.0   2023-05-26 [1] RSPM
-#>  desplim       * 0.1.1   2025-12-26 [1] local
-#>  devtools      * 2.4.6   2025-10-03 [1] RSPM
+#>  DALEXtra      * 2.3.1   2026-01-14 [1] RSPM
+#>  desplim       * 0.1.1   2026-03-19 [1] local
+#>  devtools      * 2.5.0   2026-03-14 [1] RSPM
 #>  dials         * 1.4.2   2025-09-04 [1] RSPM
-#>  doFuture      * 1.1.3   2025-12-09 [1] RSPM
-#>  dplyr         * 1.1.4   2023-11-17 [1] RSPM
+#>  doFuture      * 1.2.1   2026-02-20 [1] RSPM
+#>  dplyr         * 1.2.0   2026-02-03 [1] RSPM
 #>  foreach       * 1.5.2   2022-02-02 [1] RSPM
-#>  future        * 1.68.0  2025-11-17 [1] RSPM
+#>  future        * 1.70.0  2026-03-14 [1] RSPM
 #>  geos          * 0.2.5   2025-12-19 [1] RSPM
-#>  ggplot2       * 4.0.1   2025-11-14 [1] RSPM
+#>  ggplot2       * 4.0.2   2026-02-03 [1] RSPM
 #>  infer         * 1.1.0   2025-12-18 [1] RSPM
 #>  modeldata     * 1.5.1   2025-08-22 [1] RSPM
-#>  parsnip       * 1.4.0   2025-12-01 [1] RSPM
+#>  parsnip       * 1.4.1   2026-01-11 [1] RSPM
 #>  patchwork     * 1.3.2   2025-08-25 [1] RSPM
-#>  purrr         * 1.2.0   2025-11-04 [1] RSPM
+#>  purrr         * 1.2.1   2026-01-09 [1] RSPM
 #>  recipes       * 1.3.1   2025-05-21 [1] RSPM
 #>  redistmetrics * 1.0.11  2025-12-15 [1] RSPM
-#>  rsample       * 1.3.1   2025-07-29 [1] RSPM
+#>  rsample       * 1.3.2   2026-01-30 [1] RSPM
 #>  scales        * 1.4.0   2025-04-24 [1] RSPM
-#>  sf            * 1.0-23  2025-11-28 [1] RSPM
+#>  sf            * 1.1-0   2026-02-24 [1] RSPM
 #>  tailor        * 0.1.0   2025-08-25 [1] RSPM
 #>  tidymodels    * 1.4.1   2025-09-08 [1] RSPM
 #>  tidyr         * 1.3.2   2025-12-19 [1] RSPM
@@ -571,12 +565,12 @@ devtools::session_info(pkgs = c("attached"))
 #>  usethis       * 3.2.1   2025-09-06 [1] RSPM
 #>  workflows     * 1.3.0   2025-08-27 [1] RSPM
 #>  workflowsets  * 1.1.1   2025-05-27 [1] RSPM
-#>  xgboost       * 3.1.2.1 2025-12-03 [1] RSPM
+#>  xgboost       * 3.2.1.1 2026-03-18 [1] RSPM
 #>  yardstick     * 1.3.2   2025-01-22 [1] RSPM
 #> 
 #>  [1] /home/runner/work/_temp/Library
-#>  [2] /opt/R/4.5.2/lib/R/site-library
-#>  [3] /opt/R/4.5.2/lib/R/library
+#>  [2] /opt/R/4.5.3/lib/R/site-library
+#>  [3] /opt/R/4.5.3/lib/R/library
 #>  * ── Packages attached to the search path.
 #> 
 #> ──────────────────────────────────────────────────────────────────────────────
