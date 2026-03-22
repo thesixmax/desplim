@@ -48,6 +48,7 @@
 <span>  line_type_identifier <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  line_type_hierarchy <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  max_iter <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -87,6 +88,12 @@ parallel. If <code>TRUE</code>, uses the <code>future</code> package, where the 
 should be set using the <code>plan</code> argument. Default is <code>FALSE</code>.</p></dd>
 
 
+<dt id="arg-max-iter">max_iter<a class="anchor" aria-label="anchor" href="#arg-max-iter"></a></dt>
+<dd><p>integer; maximum number of split-merge iterations to perform
+per hierarchy level. The algorithm repeats split-merge until the polygon set
+no longer changes (convergence) or <code>max_iter</code> is reached. Default is <code>Inf</code>.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>additional arguments passed to <code>desplim_split</code>, <code>desplim_merge</code>
 and <code>desplim_connect_border</code>.</p></dd>
@@ -99,9 +106,10 @@ and <code>desplim_connect_border</code>.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The function applies the DESPLIM algorithm to a set of input
-polygons and lines. The splitting and merging steps are performed in line
-with the <code>desplim_split</code> and <code>desplim_merge</code> functions for each iteration as
-defined by <code>line_type_hierarchy</code>.</p>
+polygons and lines. For each hierarchy level, split-merge is repeated until
+convergence (the polygon set no longer changes between iterations) or
+<code>max_iter</code> is reached. Convergence is determined by the number of output
+polygons being equal to the previous iteration.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

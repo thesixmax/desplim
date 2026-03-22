@@ -12,6 +12,7 @@ desplim_split_merge(
   line_type_identifier = NULL,
   line_type_hierarchy = NULL,
   parallel = FALSE,
+  max_iter = Inf,
   ...
 )
 ```
@@ -49,6 +50,13 @@ desplim_split_merge(
   `TRUE`, uses the `future` package, where the number of workers should
   be set using the `plan` argument. Default is `FALSE`.
 
+- max_iter:
+
+  integer; maximum number of split-merge iterations to perform per
+  hierarchy level. The algorithm repeats split-merge until the polygon
+  set no longer changes (convergence) or `max_iter` is reached. Default
+  is `Inf`.
+
 - ...:
 
   additional arguments passed to `desplim_split`, `desplim_merge` and
@@ -61,6 +69,7 @@ An sf object of POLYGONs resulting from the merge.
 ## Details
 
 The function applies the DESPLIM algorithm to a set of input polygons
-and lines. The splitting and merging steps are performed in line with
-the `desplim_split` and `desplim_merge` functions for each iteration as
-defined by `line_type_hierarchy`.
+and lines. For each hierarchy level, split-merge is repeated until
+convergence (the polygon set no longer changes between iterations) or
+`max_iter` is reached. Convergence is determined by the number of output
+polygons being equal to the previous iteration.
