@@ -12,13 +12,17 @@
 #' @param parallel logical; whether to run the split and merging steps in
 #' parallel. If `TRUE`, uses the `future` package, where the number of workers
 #' should be set using the `plan` argument. Default is `FALSE`.
+#' @param max_iter integer; maximum number of split-merge iterations to perform
+#' per hierarchy level. The algorithm repeats split-merge until the polygon set
+#' no longer changes (convergence) or `max_iter` is reached. Default is `Inf`.
 #' @param ... additional arguments passed to `desplim_split`, `desplim_merge`
 #' and `desplim_connect_border`.
 #' @return An sf object of POLYGONs resulting from the merge.
 #' @details The function applies the DESPLIM algorithm to a set of input
-#' polygons and lines. The splitting and merging steps are performed in line
-#' with the `desplim_split` and `desplim_merge` functions for each iteration as
-#' defined by `line_type_hierarchy`.
+#' polygons and lines. For each hierarchy level, split-merge is repeated until
+#' convergence (the polygon set no longer changes between iterations) or
+#' `max_iter` is reached. Convergence is determined by the number of output
+#' polygons being equal to the previous iteration.
 #' @export
 desplim_split_merge <- function(
   input_polygon,
@@ -27,6 +31,7 @@ desplim_split_merge <- function(
   line_type_identifier = NULL,
   line_type_hierarchy = NULL,
   parallel = FALSE,
+  max_iter = Inf,
   ...
 ) {
   if (!inherits(input_polygon, "sf")) {
@@ -122,6 +127,9 @@ desplim_split_merge <- function(
       )
     }
   }
+  if (!is.numeric(max_iter) || length(max_iter) != 1 || max_iter < 1) {
+    stop("max_iter must be a positive number")
+  }
   if (parallel) {
     if (!requireNamespace("future.apply", quietly = TRUE)) {
       stop("Package `future.apply` must be installed to use `parallel = TRUE`.")
@@ -172,7 +180,6 @@ desplim_split_merge <- function(
     if (nrow(lines_for_splitting) == 0) {
       next
     }
-    polygons_list <- split(poly_proc, seq_len(nrow(poly_proc)))
     .process_chunk <- function(poly_chunk) {
       poly_split <- do.call(desplim_split, c(
         list(
@@ -190,18 +197,25 @@ desplim_split_merge <- function(
         args_for_merge
       )))
     }
-    if (parallel) {
-      processed_list <- future.apply::future_lapply(
-        polygons_list,
-        .process_chunk,
-        future.seed = TRUE,
-        future.chunk.size = 1L
-      )
-    } else {
-      processed_list <- lapply(polygons_list, .process_chunk)
+    iter <- 0L
+    repeat {
+      prev_nrow <- nrow(poly_proc)
+      polygons_list <- split(poly_proc, seq_len(nrow(poly_proc)))
+      if (parallel) {
+        processed_list <- future.apply::future_lapply(
+          polygons_list,
+          .process_chunk,
+          future.seed = TRUE,
+          future.chunk.size = 1L
+        )
+      } else {
+        processed_list <- lapply(polygons_list, .process_chunk)
+      }
+      valid_results <- processed_list[!vapply(processed_list, is.null, logical(1))]
+      poly_proc <- do.call(rbind, valid_results)
+      iter <- iter + 1L
+      if (nrow(poly_proc) == prev_nrow || iter >= max_iter) break
     }
-    valid_results <- processed_list[!vapply(processed_list, is.null, logical(1))]
-    poly_proc <- do.call(rbind, valid_results)
   }
   poly_proc
 }

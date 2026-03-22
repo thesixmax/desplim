@@ -11,6 +11,7 @@ desplim_split_merge(
   line_type_identifier = NULL,
   line_type_hierarchy = NULL,
   parallel = FALSE,
+  max_iter = Inf,
   ...
 )
 }
@@ -34,6 +35,10 @@ for splitting. Default is \code{NULL}. All types can be accessed with \code{"all
 parallel. If \code{TRUE}, uses the \code{future} package, where the number of workers
 should be set using the \code{plan} argument. Default is \code{FALSE}.}
 
+\item{max_iter}{integer; maximum number of split-merge iterations to perform
+per hierarchy level. The algorithm repeats split-merge until the polygon set
+no longer changes (convergence) or \code{max_iter} is reached. Default is \code{Inf}.}
+
 \item{...}{additional arguments passed to \code{desplim_split}, \code{desplim_merge}
 and \code{desplim_connect_border}.}
 }
@@ -45,7 +50,8 @@ Apply the DESPLIM algorithm to a set of input polygons and lines.
 }
 \details{
 The function applies the DESPLIM algorithm to a set of input
-polygons and lines. The splitting and merging steps are performed in line
-with the \code{desplim_split} and \code{desplim_merge} functions for each iteration as
-defined by \code{line_type_hierarchy}.
+polygons and lines. For each hierarchy level, split-merge is repeated until
+convergence (the polygon set no longer changes between iterations) or
+\code{max_iter} is reached. Convergence is determined by the number of output
+polygons being equal to the previous iteration.
 }
