@@ -130,41 +130,47 @@ desplim_line_nearest_node <- function(
   nodes_inter_list <- lengths(sf::st_intersects(all_nodes, input_nodes)) > 0
   subset_nodes <- all_nodes[!nodes_inter_list, ]
   if (combine_nodes) {
-    subset_nearest_node <- subset_nodes[
-      sf::st_nearest_feature(input_nodes, subset_nodes),
-    ]
     input_nearest_node <- input_nodes[sf::st_nearest_feature(input_nodes), ]
-    subset_distances <- sf::st_distance(
-      input_nodes,
-      subset_nearest_node,
-      by_element = TRUE
-    )
-    input_distances <- sf::st_distance(
-      input_nodes,
-      input_nearest_node,
-      by_element = TRUE
-    )
-    indices <- ifelse(
-      subset_distances < input_distances,
-      seq_along(subset_distances),
-      (length(subset_distances) + 1):(2 * length(subset_distances))
-    )
-    temp_subset <- subset_nearest_node["geometry"]
-    temp_input <- input_nearest_node["geometry"]
-    combined_nearest_node <- rbind(temp_subset, temp_input)[indices, ]
+    if (nrow(subset_nodes) == 0) {
+      combined_nearest_node <- input_nearest_node
+    } else {
+      subset_nearest_node <- subset_nodes[
+        sf::st_nearest_feature(input_nodes, subset_nodes),
+      ]
+      subset_distances <- sf::st_distance(
+        input_nodes,
+        subset_nearest_node,
+        by_element = TRUE
+      )
+      input_distances <- sf::st_distance(
+        input_nodes,
+        input_nearest_node,
+        by_element = TRUE
+      )
+      indices <- ifelse(
+        subset_distances < input_distances,
+        seq_along(subset_distances),
+        (length(subset_distances) + 1):(2 * length(subset_distances))
+      )
+      temp_subset <- subset_nearest_node["geometry"]
+      temp_input <- input_nearest_node["geometry"]
+      combined_nearest_node <- rbind(temp_subset, temp_input)[indices, ]
+    }
   } else {
     combined_nearest_node <- subset_nodes[
       sf::st_nearest_feature(input_nodes, subset_nodes),
     ]
   }
-  coords_a <- sf::st_coordinates(input_nodes)[, c("X", "Y")]
-  coords_b <- sf::st_coordinates(combined_nearest_node)[, c("X", "Y")]
-  identical_pts <- coords_a[, "X"] == coords_b[, "X"] &
-    coords_a[, "Y"] == coords_b[, "Y"]
+  coords_a <- sf::st_coordinates(input_nodes)[, c("X", "Y"), drop = FALSE]
+  coords_b <- sf::st_coordinates(combined_nearest_node)[, c("X", "Y"), drop = FALSE]
+  n_b <- nrow(coords_b)
   line_nearest_node <- sf::st_sfc(
     lapply(seq_len(nrow(coords_a)), function(i) {
-      if (identical_pts[i]) return(sf::st_linestring())
-      sf::st_linestring(rbind(coords_a[i, ], coords_b[i, ]))
+      if (i > n_b) return(sf::st_linestring())
+      ax <- coords_a[i, "X"]; ay <- coords_a[i, "Y"]
+      bx <- coords_b[i, "X"]; by <- coords_b[i, "Y"]
+      if (is.na(ax) || is.na(bx) || (ax == bx && ay == by)) return(sf::st_linestring())
+      sf::st_linestring(rbind(c(ax, ay), c(bx, by)))
     }),
     crs = sf::st_crs(input_nodes)
   )
