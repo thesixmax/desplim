@@ -523,14 +523,14 @@ devtools::session_info(pkgs = c("attached"))
 #> ─ Session info ───────────────────────────────────────────────────────────────
 #>  setting  value
 #>  version  R version 4.5.3 (2026-03-11)
-#>  os       Ubuntu 24.04.3 LTS
+#>  os       Ubuntu 24.04.4 LTS
 #>  system   x86_64, linux-gnu
 #>  ui       X11
 #>  language en
 #>  collate  C.UTF-8
 #>  ctype    C.UTF-8
 #>  tz       UTC
-#>  date     2026-03-22
+#>  date     2026-03-28
 #>  pandoc   3.1.11 @ /opt/hostedtoolcache/pandoc/3.1.11/x64/ (via rmarkdown)
 #>  quarto   NA
 #> 
@@ -539,7 +539,7 @@ devtools::session_info(pkgs = c("attached"))
 #>  broom         * 1.0.12  2026-01-27 [1] RSPM
 #>  DALEX         * 2.5.3   2025-10-16 [1] RSPM
 #>  DALEXtra      * 2.3.1   2026-01-14 [1] RSPM
-#>  desplim       * 0.1.1   2026-03-22 [1] local
+#>  desplim       * 0.1.1   2026-03-28 [1] local
 #>  devtools      * 2.5.0   2026-03-14 [1] RSPM
 #>  dials         * 1.4.2   2025-09-04 [1] RSPM
 #>  doFuture      * 1.2.1   2026-02-20 [1] RSPM
