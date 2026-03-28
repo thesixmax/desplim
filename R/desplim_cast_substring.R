@@ -42,7 +42,7 @@ desplim_cast_substring <- function(input_lines) {
     input_lines <- .desplim_rename_geom(input_lines)
   }
   if ("MULTILINESTRING" %in% input_geom_type) {
-    input_lines <- sf::st_cast(input_lines, "LINESTRING", warn = FALSE)
+    input_lines <- suppressWarnings(sf::st_cast(input_lines, "LINESTRING"))
   }
   input_attributes <- sf::st_drop_geometry(input_lines)
   n_lines <- nrow(input_lines)

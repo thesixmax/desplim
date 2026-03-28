@@ -43,7 +43,7 @@ desplim_all_nodes <- function(input_lines, cast_substring = FALSE) {
     stop("Input should be LINESTRING or MULTILINESTRING")
   }
   if (any(input_geom_types == "MULTILINESTRING")) {
-    input_lines <- sf::st_cast(input_lines, "LINESTRING", warn = FALSE)
+    input_lines <- suppressWarnings(sf::st_cast(input_lines, "LINESTRING"))
   }
   if (attr(input_lines, "sf_column") != "geometry") {
     input_lines <- .desplim_rename_geom(input_lines)

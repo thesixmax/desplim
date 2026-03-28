@@ -129,11 +129,10 @@ desplim_connect_border <- function(
     input_linestring <- .desplim_rename_geom(input_linestring)
   }
   if (any(geom_type_lines == "MULTILINESTRING")) {
-    input_linestring <- sf::st_cast(
+    input_linestring <- suppressWarnings(sf::st_cast(
       input_linestring,
-      "LINESTRING",
-      warn = FALSE
-    )
+      "LINESTRING"
+    ))
   }
   geom_type_polygon <- unique(sf::st_geometry_type(input_polygon))
   if (!all(geom_type_polygon == "POLYGON")) {

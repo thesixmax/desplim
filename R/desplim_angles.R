@@ -78,10 +78,10 @@ desplim_angles <- function(
     reference_lines <- .desplim_rename_geom(reference_lines)
   }
   if (any(input_geom_types == "MULTILINESTRING")) {
-    input_lines <- sf::st_cast(input_lines, "LINESTRING", warn = FALSE)
+    input_lines <- suppressWarnings(sf::st_cast(input_lines, "LINESTRING"))
   }
   if (any(ref_geom_types == "MULTILINESTRING")) {
-    reference_lines <- sf::st_cast(reference_lines, "LINESTRING", warn = FALSE)
+    reference_lines <- suppressWarnings(sf::st_cast(reference_lines, "LINESTRING"))
   }
   if (cast_substring) {
     input_lines <- desplim_cast_substring(input_lines)

@@ -51,7 +51,7 @@ desplim_leaf_nodes <- function(input_lines) {
     stop("Input should be LINESTRING or MULTILINESTRING")
   }
   if (any(input_geom_types == "MULTILINESTRING")) {
-    input_lines <- sf::st_cast(input_lines, "LINESTRING", warn = FALSE)
+    input_lines <- suppressWarnings(sf::st_cast(input_lines, "LINESTRING"))
   }
   lines_substring <- desplim_cast_substring(input_lines)
   all_cords <- sf::st_coordinates(lines_substring)[, c("X", "Y")]
