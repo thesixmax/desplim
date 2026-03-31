@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">desplim</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,6 +49,7 @@
 <span>  line_type_hierarchy <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  max_iter <span class="op">=</span> <span class="cn">Inf</span>,</span>
+<span>  compact_allow_subsequent <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -94,6 +95,14 @@ per hierarchy level. The algorithm repeats split-merge until the polygon set
 no longer changes (convergence) or <code>max_iter</code> is reached. Default is <code>Inf</code>.</p></dd>
 
 
+<dt id="arg-compact-allow-subsequent">compact_allow_subsequent<a class="anchor" aria-label="anchor" href="#arg-compact-allow-subsequent"></a></dt>
+<dd><p>numerical; value of <code>compact_allow</code> passed to
+<code>desplim_merge</code> from the second iteration onward. A higher value is more
+lenient, reducing the risk of re-merging polygons created in earlier
+iterations. Only applied when <code>max_iter &gt; 1</code>. Default is <code>1</code> (compactness
+does not trigger merges in subsequent iterations).</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>additional arguments passed to <code>desplim_split</code>, <code>desplim_merge</code>
 and <code>desplim_connect_border</code>.</p></dd>
@@ -110,6 +119,14 @@ polygons and lines. For each hierarchy level, split-merge is repeated until
 convergence (the polygon set no longer changes between iterations) or
 <code>max_iter</code> is reached. Convergence is determined by the number of output
 polygons being equal to the previous iteration.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
+    <p>When using <code>parallel = TRUE</code>, each worker session will print the <code>sf</code>
+startup message on first load. To suppress this, configure your <code>future</code>
+plan with an initializer before calling this function:</p>
+<p></p><div class="sourceCode r"><pre><code><span><span class="fu">future</span><span class="fu">::</span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="fu">future</span><span class="fu">::</span><span class="va"><a href="https://future.futureverse.org/reference/multisession.html" class="external-link">multisession</a></span>, workers <span class="op">=</span> <span class="va">n</span>,</span>
+<span>  initializer <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre><p></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -47,8 +47,8 @@ compactness_result <- desplim_compactness(input_sf, keep_metrics = TRUE)
 plot(input_sf)
 
 print(sf::st_drop_geometry(compactness_result))
-#>       boyce box_reock      hull   len_wid    polsby     reock  schwartz
-#> 1 0.8264538 0.5499207 0.9165904 0.7503429 0.5586596 0.3524037 0.7474354
-#>        skew    sym_x     sym_y compactness
-#> 1 0.4282874 0.649081 0.6360927    0.815994
+#>       boyce box_reock      hull   len_wid    polsby      skew    sym_x
+#> 1 0.8264538 0.5499207 0.9165904 0.7503429 0.5586596 0.4282874 0.649081
+#>       sym_y compactness
+#> 1 0.6360927   0.8500724
 ```

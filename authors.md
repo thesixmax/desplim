@@ -10,12 +10,12 @@ Source:
 [`DESCRIPTION`](https://github.com/thesixmax/desplim/blob/main/DESCRIPTION)
 
 Thestrup S (2026). *desplim: DESPLIM algorithm*. R package version
-0.1.1, <https://thesixmax.github.io/desplim/>.
+0.1.2, <https://thesixmax.github.io/desplim/>.
 
     @Manual{,
       title = {desplim: DESPLIM algorithm},
       author = {Sixten Maximillian Thestrup},
       year = {2026},
-      note = {R package version 0.1.1},
+      note = {R package version 0.1.2},
       url = {https://thesixmax.github.io/desplim/},
     }

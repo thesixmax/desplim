@@ -13,6 +13,7 @@ desplim_split_merge(
   line_type_hierarchy = NULL,
   parallel = FALSE,
   max_iter = Inf,
+  compact_allow_subsequent = 1,
   ...
 )
 ```
@@ -57,6 +58,14 @@ desplim_split_merge(
   set no longer changes (convergence) or `max_iter` is reached. Default
   is `Inf`.
 
+- compact_allow_subsequent:
+
+  numerical; value of `compact_allow` passed to `desplim_merge` from the
+  second iteration onward. A higher value is more lenient, reducing the
+  risk of re-merging polygons created in earlier iterations. Only
+  applied when `max_iter > 1`. Default is `1` (compactness does not
+  trigger merges in subsequent iterations).
+
 - ...:
 
   additional arguments passed to `desplim_split`, `desplim_merge` and
@@ -73,3 +82,12 @@ and lines. For each hierarchy level, split-merge is repeated until
 convergence (the polygon set no longer changes between iterations) or
 `max_iter` is reached. Convergence is determined by the number of output
 polygons being equal to the previous iteration.
+
+## Note
+
+When using `parallel = TRUE`, each worker session will print the `sf`
+startup message on first load. To suppress this, configure your `future`
+plan with an initializer before calling this function:
+
+    future::plan(future::multisession, workers = n,
+      initializer = function() suppressPackageStartupMessages(library(sf)))

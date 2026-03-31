@@ -1,34 +1,27 @@
 # The DESPLIM compactness score
 
-When evaluating districts, “compactness” is an important feature. But
-what makes a district compact? Often, it comes down to the human
-intuition of “you know it when you see it”, which has historically been
-hard to quantify.
-
-To provide an alternative data-driven measure of compactness, the
-`desplim` package includes a compactness score that directly models this
+The `desplim` package includes a compactness score that directly models
 human intuition. Our approach is based on the work of [Kaufman et
 al. (2021)](https://doi.org/10.1111/ajps.12603) who successfully trained
 a model on human rankings of district shapes using common geometric
 features.
 
-The algorithm may need to calculate several thousands, if not millions,
-of compactness scores during complex split-merge problems. For this
-reason, we built our own lightweight and computationally efficient model
-using
+Since the algorithm may need to calculate several thousand compactness
+scores during complex split-merge problems, we built our own lightweight
+and computationally efficient model using
 [XGBoost](https://cran.r-project.org/web/packages/xgboost/index.html).
 
-This vignette provides an overview of how the metric was developed,
-using the original [replication
+This vignette provides an overview of how the compactness score was
+developed, using the original [replication
 data](https://doi.org/10.7910/DVN/FA8FVF) and the
-[tidyverse](https://www.tidymodels.org/) framework.
+[tidymodels](https://www.tidymodels.org/) framework.
 
 ## 1. Data and Setup
 
 A cleaned and pre-processed version of this dataset is included directly
 in `desplim` as `compact_train`.
 
-First, let’s load the libraries required for modeling and diagnostics.
+First, we load the required libraries.
 
 ``` r
 library(desplim) # contains the cleaned training data
@@ -46,39 +39,64 @@ n_cores <- max(1, parallel::detectCores(logical = FALSE) - 1)
 plan(multisession, workers = n_cores)
 ```
 
-The `compact_train` data contains the human-assigned compactness score
-(`compact`), ranging from 0 (least compact) to 1 (most compact) and 10
-geometric features for 547 unique district shapes.
+The `compact_train` data contains a cleaned version of the
+human-assigned compactness score (`compact`) obtained from the
+[replication data](https://doi.org/10.7910/DVN/FA8FVF), ranging from 0
+(least compact) to 1 (most compact), and 8 geometric features for 547
+unique district shapes. The features were generated using the
+[`redistmetrics`
+package](https://alarm-redist.org/redistmetrics/index.html) — thanks to
+the authors for the amazing work!
 
 ``` r
 head(compact_train)
-#>     compact     boyce box_reock      hull   len_wid    polsby     reock
-#> 1 0.0300000 0.7649550 0.4896064 0.6262075 0.7534825 0.1145953 0.4057489
-#> 2 0.2745098 0.7775373 0.4381054 0.6984327 0.8969073 0.2021440 0.3742773
-#> 3 0.1300000 0.8304922 0.4871881 0.6415116 0.8888942 0.1258987 0.3280131
-#> 4 0.1400000 0.8341214 0.4310280 0.6125937 0.6679481 0.1873192 0.3345650
-#> 5 0.0100000 0.7016934 0.4300677 0.5800668 0.9635191 0.1019103 0.4143697
-#> 6 0.1176471 0.8371308 0.3508467 0.5589451 0.3416772 0.1458956 0.1486579
-#>    schwartz      skew     sym_x     sym_y
-#> 1 0.3385193 0.2822636 0.6494468 0.5977191
-#> 2 0.4496043 0.4190817 0.6090472 0.6896901
-#> 3 0.3548220 0.2738264 0.5287228 0.5271888
-#> 4 0.4328039 0.3005736 0.4305575 0.3530961
-#> 5 0.3192339 0.2754020 0.4761292 0.4987708
-#> 6 0.3819629 0.1683645 0.6358400 0.4629123
+#>     compact     boyce box_reock      hull   len_wid    polsby      skew
+#> 1 0.0300000 0.7649550 0.4896064 0.6262075 0.7534825 0.1145953 0.2822636
+#> 2 0.2745098 0.7775373 0.4381054 0.6984327 0.8969073 0.2021440 0.4190817
+#> 3 0.1300000 0.8304922 0.4871881 0.6415116 0.8888942 0.1258987 0.2738264
+#> 4 0.1400000 0.8341214 0.4310280 0.6125937 0.6679481 0.1873192 0.3005736
+#> 5 0.0100000 0.7016934 0.4300678 0.5800668 0.9635191 0.1019103 0.2754020
+#> 6 0.1176471 0.8371308 0.3508467 0.5589451 0.3416772 0.1458956 0.1683645
+#>       sym_x     sym_y
+#> 1 0.6494468 0.5977191
+#> 2 0.6090472 0.6896901
+#> 3 0.5287228 0.5271888
+#> 4 0.4305575 0.3530961
+#> 5 0.4761292 0.4987708
+#> 6 0.6358400 0.4629123
 ```
 
+The 8 feature columns are standard geometric compactness metrics, all of
+which can be computed directly from a district’s shape:
+
+| Feature     | Description                                                                                                                     |
+|-------------|---------------------------------------------------------------------------------------------------------------------------------|
+| `polsby`    | Polsby-Popper — proportional to the ratio of district area to its perimeter squared (4πA/P²), scored 0–1 where 1 = most compact |
+| `box_reock` | Bounding Box Reock — ratio of district area to the area of its minimum bounding rectangle, scored 0–1 where 1 = most compact    |
+| `hull`      | Convex Hull — ratio of district area to the area of its convex hull, scored 0–1 where 1 = most compact                          |
+| `boyce`     | Boyce-Clark — mean deviation of 16 evenly spaced radials from the interior centre, scored 0–∞ where **0 = most compact**        |
+| `len_wid`   | Length-Width — ratio of district width to length via bounding box, scored 0–1 where 1 = equal dimensions (most compact)         |
+| `sym_x`     | X-symmetry — area of the intersection of the district reflected over its X axis relative to total area, scored 0–1              |
+| `sym_y`     | Y-symmetry — area of the intersection of the district reflected over its Y axis relative to total area, scored 0–1              |
+| `skew`      | Skew — ratio of the maximum inscribed circle area to the minimum bounding circle area, scored 0–1 where 1 = most compact        |
+
 ``` r
-hist(compact_train$compact)
+hist(
+  compact_train$compact,
+  main = "Distribution of compactness scores",
+  xlab = "Compactness score (0 = least compact, 1 = most compact)",
+  ylab = "Number of districts",
+  col = "steelblue",
+  border = "white",
+  breaks = 20
+)
 ```
 
 ![](desplim-compactness_files/figure-html/explore-hist-1.png)
 
 The histogram shows a relatively uniform distribution of compactness
 scores, which is ideal for training a model that can recognise the full
-spectrum from non-compact to highly compact shapes. As the output
-suggests, no single geometric feature appears to be a perfect predictor
-on its own.
+spectrum of compactness scores.
 
 The following plots show three sample districts from the dataset: one of
 the least compact, one with a medium score, and one of the most compact.
@@ -131,12 +149,16 @@ We’ll split the data into a training set (80%) and a testing set (20%).
 We stratify by the compact variable to ensure both sets have a similar
 distribution of scores.
 
+> **Note:** The chunks in sections 1–3 that include `eval = FALSE` are
+> not executed during vignette build due to their long runtime. Their
+> outputs (best parameters, test metrics, predictions, and feature
+> importance) are loaded from pre-computed `.rda` files instead.
+
 ``` r
 set.seed(123)
 # Data split
 data_split <- initial_split(compact_train, prop = 0.8, strata = compact)
 train_data <- training(data_split)
-test_data <- testing(data_split)
 
 # Recipe
 model_recipe <- recipe(compact ~ ., data = train_data)
@@ -145,7 +167,7 @@ model_recipe <- recipe(compact ~ ., data = train_data)
 ## 2. Model specification and tuning
 
 With the data prepared, we can train a model to predict the compactness
-score based on the 10 geometric features. We’ll use the well known
+score based on the 8 geometric features. We’ll use the well known
 XGBoost algorithm for this task. The process involves three main steps:
 building a workflow, tuning hyperparameters, and finalising the model.
 
@@ -158,9 +180,9 @@ combination for our data. For more information, the documentation on the
 For the parameter specification, we apply the defaults provided by the
 [dials package](https://dials.tidymodels.org/).
 
-We then bundle our (simple) pre-processing recipe and the model
-specification into a single workflow object. Finally, we create a
-10-fold cross-validation.
+We then bundle our pre-processing recipe and the model specification
+into a single workflow object. Finally, we create a 10-fold
+cross-validation.
 
 ``` r
 # XGBoost specification
@@ -203,14 +225,14 @@ cv_folds <- vfold_cv(train_data, v = 10)
 
 ### 2.2 Bayesian hyperparameter tuning
 
-Instead of testing every possible combination of parameters (through a
-grid search), we’ll use Bayesian optimisation. This is an adaptive
-method that uses the results from past iterations to search for the most
-promising future parameter combinations.
+Instead of testing every possible combination of parameters (through
+e.g. a grid search), we’ll use Bayesian optimisation. This is an
+adaptive method that uses the results from past iterations to search for
+the most promising future parameter combinations.
 
-The baseline is 100 iterations, but it will stop early if it doesn’t
-find a better model after 20 rounds. We’ll use Root Mean Squared Error
-(RMSE) as the primary metric to optimise.
+The baseline is 100 iterations, with early stopping after 20 rounds. The
+Root Mean Squared Error (RMSE) is selected as the primary metric to
+optimise.
 
 ``` r
 set.seed(789)
@@ -225,7 +247,6 @@ tune_results <- tune_bayes(
     verbose_iter = TRUE,
     save_pred = FALSE,
     save_workflow = FALSE,
-    uncertain = 5,
     no_improve = 20
   )
 )
@@ -253,7 +274,7 @@ print(best_params)
 #> # A tibble: 1 × 8
 #>   trees tree_depth learn_rate  mtry min_n loss_reduction sample_size .config
 #>   <int>      <int>      <dbl> <int> <int>          <dbl>       <dbl> <chr>  
-#> 1   811         14    0.00734     9    31       1.67e-10       0.646 iter008
+#> 1   186          4     0.0281     6    20  0.00000000345       0.924 iter010
 ```
 
 ``` r
@@ -284,8 +305,8 @@ print(test_metrics)
 #> # A tibble: 2 × 4
 #>   .metric .estimator .estimate .config        
 #>   <chr>   <chr>          <dbl> <chr>          
-#> 1 rmse    standard       0.101 pre0_mod0_post0
-#> 2 rsq     standard       0.881 pre0_mod0_post0
+#> 1 rmse    standard       0.103 pre0_mod0_post0
+#> 2 rsq     standard       0.877 pre0_mod0_post0
 ```
 
 The low RMSE and high R-squared indicate that the model’s predictions
@@ -322,10 +343,10 @@ print(predicted_vs_actual_plot)
 
 ![](desplim-compactness_files/figure-html/plot-test_predictions-1.png)
 
-The plot confirms the presumed good performance. Aside from a few
-outliers, there are no major areas where the model systematically over-
-or under-predicts, suggesting it generalises well across the entire
-range of compactness scores.
+The plot confirms the good performance. Aside from a few outliers, there
+are no major areas where the model systematically over- or
+under-predicts, suggesting it generalises well across the entire range
+of compactness scores.
 
 ### 3.3 Feature importance
 
@@ -339,12 +360,10 @@ feature’s values are randomly shuffled.
 final_trained_workflow <- extract_workflow(final_fit)
 
 # Create DALEX explainer and feature importance
-train_predictors <- train_data |> select(-compact)
-train_outcome <- train_data$compact
 explainer <- explain_tidymodels(
   final_trained_workflow,
-  data = train_predictors,
-  y = train_outcome,
+  data  = train_data |> select(-compact),
+  y     = train_data$compact,
   label = "XGBoost"
 )
 feature_importance <- model_parts(explainer)
@@ -352,10 +371,10 @@ feature_importance <- model_parts(explainer)
 
 ``` r
 # Create summary dataframe
-importance_summary_df <- feature_importance %>%
-  as_tibble() %>%
-  dplyr::filter(variable != "_baseline_" & variable != "_full_model_") %>%
-  group_by(variable) %>%
+importance_summary_df <- feature_importance |>
+  as_tibble() |>
+  dplyr::filter(variable != "_baseline_" & variable != "_full_model_") |>
+  group_by(variable) |>
   summarise(
     mean_dropout = mean(dropout_loss),
     min_dropout = min(dropout_loss),
@@ -393,16 +412,35 @@ The results clearly show that Polsby-Popper and Convex Hull are the two
 most influential features. This aligns with their common usage in
 (re-)districting analysis and their relation to what is typically
 perceived as compact. However, all features play a role in predicting
-the compactness score, justifying a more nuanced model setup.
+the compactness score, which justifies a more nuanced model setup.
 
-## 4. Usage
+## 4. Known limitations
 
-This model is now available in the package through the
+The model performs well across the full range of compactness scores, but
+a few limitations are worth keeping in mind:
+
+- **Slow convergence at the extremes.** Because the training scores are
+  human-assigned and rarely reach exactly 0 or 1, the model tends to
+  under-predict near the high end and over-predict near the low end.
+  Very compact or very non-compact districts will therefore receive
+  scores that are somewhat pulled towards the centre.
+- **Sensitivity to perimeter complexity.** Polsby-Popper — a
+  perimeter-dependent measure — is the most influential feature.
+  Districts with unusual perimeter characteristics (e.g., highly jagged
+  boundaries) may receive predictions that diverge from human intuition,
+  as illustrated in Section 5.2 below.
+- **Training domain.** The model was trained on U.S. congressional and
+  state legislative districts. Its behaviour on district shapes from
+  very different political geographies is untested.
+
+## 5. Usage
+
+### 5.1 Basic usage
+
+The model is available directly in the package through the
 [`desplim_compactness()`](https://thesixmax.github.io/desplim/reference/desplim_compactness.md)
-function.
-
-The final test is to see how the model’s predictions compare to the
-original compactness scores on the example districts.
+function. As a final validation, we check how its predictions compare to
+the original human-assigned scores on the three example districts.
 
 ``` r
 # Apply desplim_compactness to the original example districts
@@ -457,15 +495,23 @@ p1_final + p2_final + p3_final
 
 As we can see, the scores from the
 [`desplim_compactness()`](https://thesixmax.github.io/desplim/reference/desplim_compactness.md)
-function are very close to the original compactness scores.
+function are very close to the original compactness scores. However, it
+should be noted that, due to the nature of the modelling approach, the
+convergence towards 0 and 1 is slow, even for what appears to be highly
+(non-)compact districts.
 
-Finally, we can investigate the example district with the largest
-deviance between the model prediction and actual compactness score. We
-set `keep_metrics = TRUE` in the
+### 5.2 Diagnosing unexpected predictions
+
+When a model prediction for a particular district seems unexpectedly
+high or low,
 [`desplim_compactness()`](https://thesixmax.github.io/desplim/reference/desplim_compactness.md)
-function. This returns not just the final score, but also the 10
-underlying geometric features, which is useful for diagnosing specific
-cases.
+provides a straightforward way to investigate. Setting
+`keep_metrics = TRUE` returns not just the final score but also all 8
+underlying geometric features. Inspecting these reveals which feature is
+driving the unusual prediction.
+
+To illustrate, we find the district in the example data with the largest
+deviance between the model prediction and the human-assigned score.
 
 ``` r
 # Calculate deviances
@@ -473,7 +519,7 @@ compare_scores <- desplim_compactness(kaufman_25, keep_metrics = TRUE) |>
   mutate(deviance = abs(compact - compactness))
 
 # Find the district with the largest deviance
-max_deviance <- compare_scores %>%
+max_deviance <- compare_scores |>
   dplyr::slice_max(order_by = deviance, n = 1)
 
 # Plot the result
@@ -495,28 +541,30 @@ ggplot(max_deviance) +
 
 ![](desplim-compactness_files/figure-html/deviance-1.png)
 
-The main reason for the high deviance is the disagreement between the
-different geometrical feaures of the district:
+To understand the reason behind the high deviance we can investigate the
+different geometrical features of the district:
 
 ``` r
 print(max_deviance)
-#> Simple feature collection with 1 feature and 13 fields
+#> Simple feature collection with 1 feature and 11 fields
 #> Geometry type: POLYGON
 #> Dimension:     XY
 #> Bounding box:  xmin: -88.02823 ymin: 42.12151 xmax: -87.88505 ymax: 42.36036
 #> Geodetic CRS:  NAD83
-#>     compact     boyce box_reock      hull   len_wid    polsby     reock
-#> 1 0.4509804 0.7310901 0.3964636 0.5551677 0.4437754 0.1500558 0.2241015
-#>    schwartz      skew     sym_x     sym_y compactness  deviance
-#> 1 0.3873703 0.2151164 0.4948946 0.4713435   0.1375506 0.3134298
-#>                         geometry
-#> 1 POLYGON ((-88.02823 42.2698...
+#>     compact     boyce box_reock      hull   len_wid    polsby      skew
+#> 1 0.4509804 0.7310901 0.3964636 0.5551677 0.4437754 0.1500558 0.2151164
+#>       sym_x     sym_y compactness  deviance                       geometry
+#> 1 0.4948946 0.4713435   0.1953411 0.2556393 POLYGON ((-88.02823 42.2698...
 ```
 
-The shape has a very low polsby score (indicating a highly complex
-perimeter), while other features are not as low. This example doesn’t
-indicate model failure. It rather highlights that the model is sensitive
-to perimeter complexity.
+The shape has a very low Polsby-Popper score (indicating a highly
+complex perimeter), while other features are not as low. Since we know
+that the feature importance of Polsby-Popper is high, this disagreement
+is somewhat expected. We do not consider this particular example to be
+an indicator of poor model design, but rather highlights that the model
+is sensitive to perimeter complexity.
+
+## Session information
 
 ``` r
 devtools::session_info(pkgs = c("attached"))
@@ -530,7 +578,7 @@ devtools::session_info(pkgs = c("attached"))
 #>  collate  C.UTF-8
 #>  ctype    C.UTF-8
 #>  tz       UTC
-#>  date     2026-03-28
+#>  date     2026-03-31
 #>  pandoc   3.1.11 @ /opt/hostedtoolcache/pandoc/3.1.11/x64/ (via rmarkdown)
 #>  quarto   NA
 #> 
@@ -539,7 +587,7 @@ devtools::session_info(pkgs = c("attached"))
 #>  broom         * 1.0.12  2026-01-27 [1] RSPM
 #>  DALEX         * 2.5.3   2025-10-16 [1] RSPM
 #>  DALEXtra      * 2.3.1   2026-01-14 [1] RSPM
-#>  desplim       * 0.1.1   2026-03-28 [1] local
+#>  desplim       * 0.1.2   2026-03-31 [1] local
 #>  devtools      * 2.5.0   2026-03-14 [1] RSPM
 #>  dials         * 1.4.2   2025-09-04 [1] RSPM
 #>  doFuture      * 1.2.1   2026-02-20 [1] RSPM

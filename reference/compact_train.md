@@ -12,51 +12,51 @@ compact_train
 
 ## Format
 
-A data frame with 547 rows and 11 columns:
+A data frame with 547 rows and 9 columns:
 
 - compact:
 
-  Kaufman compactness
+  Human-assigned compactness score, rescaled to 0 (least compact) to 1
+  (most compact)
 
 - boyce:
 
-  Boyce Clark ratio
+  Boyce-Clark index: mean deviation of 16 evenly spaced radials from the
+  interior centre (0-Inf, 0 = most compact)
 
 - box_reock:
 
-  Box Reock compactness
+  Bounding Box Reock: ratio of district area to its minimum bounding
+  rectangle area (0-1)
 
 - hull:
 
-  Convex Hull compactness
+  Convex Hull: ratio of district area to its convex hull area (0-1)
 
 - len_wid:
 
-  Length-Width compactness
+  Length-Width: ratio of district width to length via bounding box (0-1,
+  1 = equal dimensions)
 
 - polsby:
 
-  Polsby Popper compactness
-
-- reock:
-
-  Reock compactness
-
-- schwartz:
-
-  Schwartzberg compactness
+  Polsby-Popper: proportional to the ratio of district area to its
+  perimeter squared (0-1)
 
 - skew:
 
-  Skew compactness
+  Skew: ratio of maximum inscribed circle area to minimum bounding
+  circle area (0-1)
 
 - sym_x:
 
-  X symmetry
+  X-symmetry: intersection of district with its X-axis reflection,
+  relative to total area (0-1)
 
 - sym_y:
 
-  Y symmetry
+  Y-symmetry: intersection of district with its Y-axis reflection,
+  relative to total area (0-1)
 
 ## Source
 

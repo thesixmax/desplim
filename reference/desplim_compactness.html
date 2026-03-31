@@ -9,7 +9,7 @@ function computes the compactness of an sf POLYGON object."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">desplim</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,10 +87,10 @@ are cast to POLYGON before computing.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">input_sf</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="desplim_compactness-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_drop_geometry</a></span><span class="op">(</span><span class="va">compactness_result</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       boyce box_reock      hull   len_wid    polsby     reock  schwartz</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.8264538 0.5499207 0.9165904 0.7503429 0.5586596 0.3524037 0.7474354</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        skew    sym_x     sym_y compactness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.4282874 0.649081 0.6360927    0.815994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       boyce box_reock      hull   len_wid    polsby      skew    sym_x</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.8264538 0.5499207 0.9165904 0.7503429 0.5586596 0.4282874 0.649081</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       sym_y compactness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.6360927   0.8500724</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
