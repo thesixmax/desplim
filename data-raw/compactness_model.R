@@ -19,7 +19,6 @@ devtools::load_all()
 # Configure parallel processing
 registerDoFuture()
 plan(multisession, workers = parallel::detectCores(logical = FALSE) - 1)
-options(tidymodels.dark = TRUE)
 
 # Split data
 set.seed(123)
@@ -29,7 +28,6 @@ data_split <- initial_split(
   strata = compact
 )
 train_data <- training(data_split)
-test_data <- testing(data_split)
 
 # Recipe
 model_recipe <- recipe(compact ~ ., data = train_data)
@@ -89,36 +87,31 @@ tune_results <- tune_bayes(
 
 # Select parameters
 best_params <- select_best(tune_results, metric = "rmse")
-save(best_params, file = "vignettes/best_params.rda")
 print(best_params)
 
 # Finalise the workflow and fit
-final_xgb_wf <- finalize_workflow(xgb_workflow, best_params)
-final_fit <- last_fit(final_xgb_wf, data_split)
-
-# Model metrics
-test_metrics <- collect_metrics(final_fit)
-save(test_metrics, file = "vignettes/test_metrics.rda")
-print(test_metrics)
-
-# Model predictions
+final_xgb_wf     <- finalize_workflow(xgb_workflow, best_params)
+final_fit        <- last_fit(final_xgb_wf, data_split)
+test_metrics     <- collect_metrics(final_fit)
 test_predictions <- collect_predictions(final_fit)
-save(test_predictions, file = "vignettes/test_predictions.rda")
+print(test_metrics)
 
 # Final workflow
 final_trained_workflow <- extract_workflow(final_fit)
 
-# Create explainer
-train_predictors <- train_data |> select(-compact)
-train_outcome <- train_data$compact
+# Feature importance via DALEX
 explainer <- explain_tidymodels(
   final_trained_workflow,
-  data = train_predictors,
-  y = train_outcome,
+  data  = train_data |> select(-compact),
+  y     = train_data$compact,
   label = "XGBoost"
 )
 feature_importance <- model_parts(explainer)
-save(feature_importance, file = "vignettes/feature_importance.rda")
+
+# Save vignette artifacts
+for (nm in c("best_params", "test_metrics", "test_predictions", "feature_importance")) {
+  save(list = nm, file = paste0("vignettes/", nm, ".rda"))
+}
 
 # Extract XGBoost model object
 xgb_model_engine <- extract_fit_engine(final_trained_workflow)

@@ -12,6 +12,7 @@ desplim_split_merge(
   line_type_hierarchy = NULL,
   parallel = FALSE,
   max_iter = Inf,
+  compact_allow_subsequent = 1,
   ...
 )
 }
@@ -39,6 +40,12 @@ should be set using the \code{plan} argument. Default is \code{FALSE}.}
 per hierarchy level. The algorithm repeats split-merge until the polygon set
 no longer changes (convergence) or \code{max_iter} is reached. Default is \code{Inf}.}
 
+\item{compact_allow_subsequent}{numerical; value of \code{compact_allow} passed to
+\code{desplim_merge} from the second iteration onward. A higher value is more
+lenient, reducing the risk of re-merging polygons created in earlier
+iterations. Only applied when \code{max_iter > 1}. Default is \code{1} (compactness
+does not trigger merges in subsequent iterations).}
+
 \item{...}{additional arguments passed to \code{desplim_split}, \code{desplim_merge}
 and \code{desplim_connect_border}.}
 }
@@ -54,4 +61,13 @@ polygons and lines. For each hierarchy level, split-merge is repeated until
 convergence (the polygon set no longer changes between iterations) or
 \code{max_iter} is reached. Convergence is determined by the number of output
 polygons being equal to the previous iteration.
+}
+\note{
+When using \code{parallel = TRUE}, each worker session will print the \code{sf}
+startup message on first load. To suppress this, configure your \code{future}
+plan with an initializer before calling this function:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{future::plan(future::multisession, workers = n,
+  initializer = function() suppressPackageStartupMessages(library(sf)))
+}\if{html}{\out{</div>}}
 }

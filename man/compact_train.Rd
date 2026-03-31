@@ -5,19 +5,17 @@
 \alias{compact_train}
 \title{Data used to model the DESPLIM compactness metric}
 \format{
-A data frame with 547 rows and 11 columns:
+A data frame with 547 rows and 9 columns:
 \describe{
-\item{compact}{Kaufman compactness}
-\item{boyce}{Boyce Clark ratio}
-\item{box_reock}{Box Reock compactness}
-\item{hull}{Convex Hull compactness}
-\item{len_wid}{Length-Width compactness}
-\item{polsby}{Polsby Popper compactness}
-\item{reock}{Reock compactness}
-\item{schwartz}{Schwartzberg compactness}
-\item{skew}{Skew compactness}
-\item{sym_x}{X symmetry}
-\item{sym_y}{Y symmetry}
+\item{compact}{Human-assigned compactness score, rescaled to 0 (least compact) to 1 (most compact)}
+\item{boyce}{Boyce-Clark index: mean deviation of 16 evenly spaced radials from the interior centre (0-Inf, 0 = most compact)}
+\item{box_reock}{Bounding Box Reock: ratio of district area to its minimum bounding rectangle area (0-1)}
+\item{hull}{Convex Hull: ratio of district area to its convex hull area (0-1)}
+\item{len_wid}{Length-Width: ratio of district width to length via bounding box (0-1, 1 = equal dimensions)}
+\item{polsby}{Polsby-Popper: proportional to the ratio of district area to its perimeter squared (0-1)}
+\item{skew}{Skew: ratio of maximum inscribed circle area to minimum bounding circle area (0-1)}
+\item{sym_x}{X-symmetry: intersection of district with its X-axis reflection, relative to total area (0-1)}
+\item{sym_y}{Y-symmetry: intersection of district with its Y-axis reflection, relative to total area (0-1)}
 }
 }
 \source{
